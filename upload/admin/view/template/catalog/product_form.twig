@@ -968,7 +968,6 @@
                 </div>
               </div>
             </div>
-
             <div id="tab-attribute" class="tab-pane">
               <div class="table-responsive">
                 <table id="product-attribute" class="table table-bordered table-hover">
@@ -1018,7 +1017,6 @@
                 </table>
               </div>
             </div>
-
             {% if not master_id %}
               <div id="tab-option" class="tab-pane">
                 <div id="option">
@@ -1770,6 +1768,7 @@
                   </div>
                 </div>
               </fieldset>
+
               <fieldset>
                 <legend>{{ text_points }}</legend>
                 <div class="table-responsive">
@@ -1891,7 +1890,7 @@ $('textarea[data-toggle=\'ckeditor\']').ckeditor();
 $('input[name=\'manufacturer\']').autocomplete({
 	'source': function(request, response) {
 		$.ajax({
-			url: 'index.php?route=catalog/manufacturer/autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+			url: 'index.php?route=catalog/manufacturer|autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
 			dataType: 'json',
 			success: function(json) {
 				json.unshift({
@@ -1918,7 +1917,7 @@ $('input[name=\'manufacturer\']').autocomplete({
 $('input[name=\'category\']').autocomplete({
 	'source': function(request, response) {
 		$.ajax({
-			url: 'index.php?route=catalog/category/autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+			url: 'index.php?route=catalog/category|autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
 			dataType: 'json',
 			success: function(json) {
 				response($.map(json, function(item) {
@@ -1952,7 +1951,7 @@ $('#product-category').on('click', '.btn', function() {
 $('input[name=\'filter\']').autocomplete({
 	'source': function(request, response) {
 		$.ajax({
-			url: 'index.php?route=catalog/filter/autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+			url: 'index.php?route=catalog/filter|autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
 			dataType: 'json',
 			success: function(json) {
 				response($.map(json, function(item) {
@@ -1986,7 +1985,7 @@ $('#product-filter').on('click', '.btn', function() {
 $('input[name=\'download\']').autocomplete({
 	'source': function(request, response) {
 		$.ajax({
-			url: 'index.php?route=catalog/download/autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+			url: 'index.php?route=catalog/download|autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
 			dataType: 'json',
 			success: function(json) {
 				response($.map(json, function(item) {
@@ -2020,7 +2019,7 @@ $('#product-download').on('click', '.btn', function() {
 $('input[name=\'related\']').autocomplete({
 	'source': function(request, response) {
 		$.ajax({
-			url: 'index.php?route=catalog/product/autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+			url: 'index.php?route=catalog/product|autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
 			dataType: 'json',
 			success: function(json) {
 				response($.map(json, function(item) {
@@ -2078,7 +2077,7 @@ function attributeautocomplete(attribute_row) {
 	$('input[name=\'product_attribute[' + attribute_row + '][name]\']').autocomplete({
 		'source': function(request, response) {
 			$.ajax({
-				url: 'index.php?route=catalog/attribute/autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+				url: 'index.php?route=catalog/attribute|autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
 				dataType: 'json',
 				success: function(json) {
 					response($.map(json, function(item) {
@@ -2109,7 +2108,7 @@ var option_row = {{ option_row }};
 $('input[name=\'option\']').autocomplete({
 	'source': function(request, response) {
 		$.ajax({
-			url: 'index.php?route=catalog/option/autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+			url: 'index.php?route=catalog/option|autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
 			dataType: 'json',
 			success: function(json) {
 				response($.map(json, function(item) {
@@ -2529,7 +2528,7 @@ $('#content').on('click', 'button[id^=\'button-upload\']', function() {
 			clearInterval(timer);
 
 			$.ajax({
-				url: 'index.php?route=tool/upload/upload&user_token={{ user_token }}',
+				url: 'index.php?route=tool/upload|upload&user_token={{ user_token }}',
 				type: 'post',
 				dataType: 'json',
 				data: new FormData($('#form-upload')[0]),
@@ -2591,10 +2590,8 @@ $('input[data-toggle=\'switch\']').on('change', function(e) {
 
 	var target = $(this).attr('data-target');
 
-
 	// First we need to grab the default values
 	$(target).each(function() {
-
 
 		// Table
 		if ($(this).is('table')) {
@@ -2603,12 +2600,9 @@ $('input[data-toggle=\'switch\']').on('change', function(e) {
 				$(element).html($(this).html());
 			}
 
-			console.log(this);
-
 			//$(this).prop('disabled', !$(element).prop('checked'));
 		}
 	});
-
 
 	// Now we need to enable or disable any fields in the targets
 	$.merge($(target), $(target).find('input, textarea, select, button')).not('.custom-control-input').each(function() {
@@ -2656,37 +2650,27 @@ $('input[data-toggle=\'switch\']').on('change', function(e) {
 		if ($(this).is('button')) {
 			$(this).prop('disabled', !$(element).prop('checked'));
 		}
-
-
 	});
-
-
 });
 
 $('.custom-control-input').trigger('change');
 
-/*
 $(document).ready(function() {
+	$.ajax({
+		url: 'index.php?route=catalog/manufacturer|autocomplete&user_token={{ user_token }}&filter_name=',
+		dataType: 'json',
+		success: function(json) {
+			html = '<tr id="product-category' + item['value'] + '">';
+			html += '  <td>' + item['label'] + '<input type="hidden" name="product_category[]" value="' + item['value'] + '"/></td>';
+			html += '  <td class="text-right"><button type="button" class="btn btn-danger btn-sm"><i class="fas fa-minus-circle"></i></button></td>';
+			html += '</tr>';
 
-$.ajax({
-    url: 'index.php?route=catalog/manufacturer/autocomplete&user_token={{ user_token }}&filter_name=',
-    dataType: 'json',
-    success: function(json) {
-        html = '<tr id="product-category' + item['value'] + '">';
-        html += '  <td>' + item['label'] + '<input type="hidden" name="product_category[]" value="' + item['value'] + '"/></td>';
-        html += '  <td class="text-right"><button type="button" class="btn btn-danger btn-sm"><i class="fas fa-minus-circle"></i></button></td>';
-        html += '</tr>';
-
-        $('#product-category').append(html);
-    }
+			$('#product-category').append(html);
+		}
+	});
 });
-});
 
-$('input[data-toggle=\'switch\']').on('change', function(e) {
-
-
-});
-*/
+$('input[data-toggle=\'switch\']').on('change', function(e) {});
 {% endif %}
 //--></script>
 <script type="text/javascript"><!--

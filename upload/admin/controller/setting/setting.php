@@ -1,6 +1,7 @@
 <?php
-class ControllerSettingSetting extends Controller {
-	private $error = array();
+namespace Opencart\Application\Controller\Setting;
+class Setting extends \Opencart\System\Engine\Controller {
+	private $error = [];
 
 	public function index() {
 		$this->load->language('setting/setting');
@@ -137,22 +138,22 @@ class ControllerSettingSetting extends Controller {
 			$data['error_mime'] = '';
 		}
 
-		$data['breadcrumbs'] = array();
+		$data['breadcrumbs'] = [];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_home'),
 			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'])
-		);
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_stores'),
 			'href' => $this->url->link('setting/store', 'user_token=' . $this->session->data['user_token'])
-		);
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('heading_title'),
 			'href' => $this->url->link('setting/setting', 'user_token=' . $this->session->data['user_token'])
-		);
+		];
 
 		if (isset($this->session->data['success'])) {
 			$data['success'] = $this->session->data['success'];
@@ -163,7 +164,6 @@ class ControllerSettingSetting extends Controller {
 		}
 
 		$data['action'] = $this->url->link('setting/setting', 'user_token=' . $this->session->data['user_token']);
-
 		$data['cancel'] = $this->url->link('setting/store', 'user_token=' . $this->session->data['user_token']);
 
 		$data['user_token'] = $this->session->data['user_token'];
@@ -194,20 +194,20 @@ class ControllerSettingSetting extends Controller {
 
 		$data['store_url'] = HTTP_CATALOG;
 
-		$data['themes'] = array();
+		$data['themes'] = [];
 
 		$this->load->model('setting/extension');
 
-		$extensions = $this->model_setting_extension->getInstalled('theme');
+		$extensions = $this->model_setting_extension->getExtensionsByType('theme');
 
-		foreach ($extensions as $code) {
-			if ($this->config->get('theme_' . $code . '_status')) {
-				$this->load->language('extension/theme/' . $code, 'extension');
+		foreach ($extensions as $extension) {
+			if ($this->config->get('theme_' . $extension['code'] . '_status')) {
+				$this->load->language('extension/' . $extension['extension'] . '/theme/' . $extension['code'], 'extension');
 
-				$data['themes'][] = array(
+				$data['themes'][] = [
 					'text'  => $this->language->get('extension_heading_title'),
-					'value' => $code
-				);
+					'value' => $extension['code']
+				];
 			}
 		}
 
@@ -300,7 +300,7 @@ class ControllerSettingSetting extends Controller {
 		} elseif ($this->config->get('config_location')) {
 			$data['config_location'] = $this->config->get('config_location');
 		} else {
-			$data['config_location'] = array();
+			$data['config_location'] = [];
 		}
 
 		if (isset($this->request->post['config_country_id'])) {
@@ -328,21 +328,21 @@ class ControllerSettingSetting extends Controller {
 		}
 
 		// Set Time Zone
-		$data['timezones'] = array();
+		$data['timezones'] = [];
 
 		$timestamp = time();
 
 		$timezones = timezone_identifiers_list();
 
-		foreach($timezones as $timezone) {
+		foreach ($timezones as $timezone) {
 			date_default_timezone_set($timezone);
 
 			$hour = ' (' . date('P', $timestamp) . ')';
 
-			$data['timezones'][] = array(
+			$data['timezones'][] = [
 				'text'  => $timezone . $hour,
 				'value' => $timezone
-			);
+			];
 		}
 
 		date_default_timezone_set($this->config->get('config_timezone'));
@@ -369,20 +369,20 @@ class ControllerSettingSetting extends Controller {
 			$data['config_currency'] = $this->config->get('config_currency');
 		}
 
-		$data['currency_engines'] = array();
+		$data['currency_engines'] = [];
 
 		$this->load->model('setting/extension');
 
-		$extensions = $this->model_setting_extension->getInstalled('currency');
+		$extensions = $this->model_setting_extension->getExtensionsByType('currency');
 
-		foreach ($extensions as $code) {
-			if ($this->config->get('currency_' . $code . '_status')) {
-				$this->load->language('extension/currency/' . $code, 'extension');
+		foreach ($extensions as $extension) {
+			if ($this->config->get('currency_' . $extension['code'] . '_status')) {
+				$this->load->language('extension/' . $extension['extension'] . '/currency/' . $extension['code'], 'extension');
 
-				$data['currency_engines'][] = array(
+				$data['currency_engines'][] = [
 					'text'  => $this->language->get('extension_heading_title'),
-					'value' => $code
-				);
+					'value' => $extension['code']
+				];
 			}
 		}
 
@@ -527,7 +527,7 @@ class ControllerSettingSetting extends Controller {
 		} elseif ($this->config->get('config_customer_group_display')) {
 			$data['config_customer_group_display'] = $this->config->get('config_customer_group_display');
 		} else {
-			$data['config_customer_group_display'] = array();
+			$data['config_customer_group_display'] = [];
 		}
 
 		if (isset($this->request->post['config_customer_price'])) {
@@ -591,7 +591,7 @@ class ControllerSettingSetting extends Controller {
 		} elseif ($this->config->get('config_processing_status')) {
 			$data['config_processing_status'] = $this->config->get('config_processing_status');
 		} else {
-			$data['config_processing_status'] = array();
+			$data['config_processing_status'] = [];
 		}
 
 		if (isset($this->request->post['config_complete_status'])) {
@@ -599,7 +599,7 @@ class ControllerSettingSetting extends Controller {
 		} elseif ($this->config->get('config_complete_status')) {
 			$data['config_complete_status'] = $this->config->get('config_complete_status');
 		} else {
-			$data['config_complete_status'] = array();
+			$data['config_complete_status'] = [];
 		}
 
 		if (isset($this->request->post['config_fraud_status_id'])) {
@@ -638,6 +638,14 @@ class ControllerSettingSetting extends Controller {
 			$data['config_stock_checkout'] = $this->request->post['config_stock_checkout'];
 		} else {
 			$data['config_stock_checkout'] = $this->config->get('config_stock_checkout');
+		}
+
+		if (isset($this->request->post['config_affiliate_status'])) {
+			$data['config_affiliate_status'] = $this->request->post['config_affiliate_status'];
+		} elseif ($this->config->has('config_affiliate_status')) {
+			$data['config_affiliate_status'] = $this->config->get('config_affiliate_status');
+		} else {
+			$data['config_affiliate_status'] = true;
 		}
 
 		if (isset($this->request->post['config_affiliate_group_id'])) {
@@ -700,19 +708,19 @@ class ControllerSettingSetting extends Controller {
 
 		$this->load->model('setting/extension');
 
-		$data['captchas'] = array();
+		$data['captchas'] = [];
 
 		// Get a list of installed captchas
-		$extensions = $this->model_setting_extension->getInstalled('captcha');
+		$extensions = $this->model_setting_extension->getExtensionsByType('captcha');
 
-		foreach ($extensions as $code) {
-			$this->load->language('extension/captcha/' . $code, $code);
+		foreach ($extensions as $extension) {
+			$this->load->language('extension/' . $extension['extension'] . '/captcha/' . $extension['code'], $extension['code']);
 
-			if ($this->config->get('captcha_' . $code . '_status')) {
-				$data['captchas'][] = array(
-					'text'  => $this->language->get($code . '_heading_title'),
-					'value' => $code
-				);
+			if ($this->config->get('captcha_' . $extension['code'] . '_status')) {
+				$data['captchas'][] = [
+					'text'  => $this->language->get($extension['code'] . '_heading_title'),
+					'value' => $extension['code']
+				];
 			}
 		}
 
@@ -721,35 +729,35 @@ class ControllerSettingSetting extends Controller {
 		} elseif ($this->config->has('config_captcha_page')) {
 		   	$data['config_captcha_page'] = $this->config->get('config_captcha_page');
 		} else {
-			$data['config_captcha_page'] = array();
+			$data['config_captcha_page'] = [];
 		}
 
-		$data['captcha_pages'] = array();
+		$data['captcha_pages'] = [];
 
-		$data['captcha_pages'][] = array(
+		$data['captcha_pages'][] = [
 			'text'  => $this->language->get('text_register'),
 			'value' => 'register'
-		);
+		];
 
-		$data['captcha_pages'][] = array(
+		$data['captcha_pages'][] = [
 			'text'  => $this->language->get('text_guest'),
 			'value' => 'guest'
-		);
+		];
 
-		$data['captcha_pages'][] = array(
+		$data['captcha_pages'][] = [
 			'text'  => $this->language->get('text_review'),
 			'value' => 'review'
-		);
+		];
 
-		$data['captcha_pages'][] = array(
+		$data['captcha_pages'][] = [
 			'text'  => $this->language->get('text_return'),
 			'value' => 'return'
-		);
+		];
 
-		$data['captcha_pages'][] = array(
+		$data['captcha_pages'][] = [
 			'text'  => $this->language->get('text_contact'),
 			'value' => 'contact'
-		);
+		];
 
 		if (isset($this->request->post['config_logo'])) {
 			$data['config_logo'] = $this->request->post['config_logo'];
@@ -830,30 +838,30 @@ class ControllerSettingSetting extends Controller {
 		} elseif ($this->config->has('config_mail_alert')) {
 		   	$data['config_mail_alert'] = $this->config->get('config_mail_alert');
 		} else {
-			$data['config_mail_alert'] = array();
+			$data['config_mail_alert'] = [];
 		}
 
-		$data['mail_alerts'] = array();
+		$data['mail_alerts'] = [];
 
-		$data['mail_alerts'][] = array(
+		$data['mail_alerts'][] = [
 			'text'  => $this->language->get('text_mail_account'),
 			'value' => 'account'
-		);
+		];
 
-		$data['mail_alerts'][] = array(
+		$data['mail_alerts'][] = [
 			'text'  => $this->language->get('text_mail_affiliate'),
 			'value' => 'affiliate'
-		);
+		];
 
-		$data['mail_alerts'][] = array(
+		$data['mail_alerts'][] = [
 			'text'  => $this->language->get('text_mail_order'),
 			'value' => 'order'
-		);
+		];
 
-		$data['mail_alerts'][] = array(
+		$data['mail_alerts'][] = [
 			'text'  => $this->language->get('text_mail_review'),
 			'value' => 'review'
-		);
+		];
 
 		if (isset($this->request->post['config_mail_alert_email'])) {
 			$data['config_mail_alert_email'] = $this->request->post['config_mail_alert_email'];
@@ -1005,11 +1013,11 @@ class ControllerSettingSetting extends Controller {
 			$this->error['complete_status'] = $this->language->get('error_complete_status');
 		}
 
-		$disallowed = array(
+		$disallowed = [
 			'php',
 			'php4',
-			'php3',
-		);
+			'php3'
+		];
 
 		$extensions = explode("\n", $this->request->post['config_file_ext_allowed']);
 
@@ -1021,11 +1029,11 @@ class ControllerSettingSetting extends Controller {
 			}
 		}
 
-		$disallowed = array(
+		$disallowed = [
 			'php',
 			'php4',
-			'php3',
-		);
+			'php3'
+		];
 
 		$mimes = explode("\n", $this->request->post['config_file_mime_allowed']);
 
@@ -1057,15 +1065,28 @@ class ControllerSettingSetting extends Controller {
 	}
 
 	public function theme() {
-		// This is only here for compatibility with old themes.
-		if ($this->request->get['theme'] == 'theme_default') {
-			$theme = $this->config->get('theme_default_directory');
+		$theme = basename($this->request->get['theme']);
+
+		if ($theme == 'basic') {
+			$image = HTTP_CATALOG . 'view/template/image/' . $theme . '.png';
 		} else {
-			$theme = basename($this->request->get['theme']);
+			$this->load->model('setting/extension');
+
+			$extension_info = $this->model_setting_extension->getExtensionByCode('theme', $theme);
+
+			if ($extension_info) {
+				$image = DIR_EXTENSION . $extension_info['extension'] . '/catalog/view/template/image/' . $extension_info['code'] . '.png';
+			}
 		}
 
-		if (is_file(DIR_CATALOG . 'view/theme/' . $theme . '/image/' . $theme . '.png')) {
-			$this->response->setOutput(HTTP_CATALOG . 'catalog/view/theme/' . $theme . '/image/' . $theme . '.png');
+		if (is_file($image)) {
+			$this->response->setOutput($image);
+		} else {
+			$this->response->setOutput(HTTP_CATALOG . 'image/no_image.png');
+		}
+
+		if (is_file(DIR_EXTENSION . $extension_info['extension'] . '/catalog/view/template/image/' . $extension_info['code'] . '.png')) {
+			$this->response->setOutput(DIR_EXTENSION . $extension_info['extension'] . '/catalog/view/template/image/' . $extension_info['code'] . '.png');
 		} else {
 			$this->response->setOutput(HTTP_CATALOG . 'image/no_image.png');
 		}

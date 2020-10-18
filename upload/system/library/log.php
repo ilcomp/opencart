@@ -10,6 +10,7 @@
 /**
 * Log class
 */
+namespace Opencart\System\Library;
 class Log {
 	private $handle;
 	

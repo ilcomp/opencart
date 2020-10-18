@@ -10,6 +10,7 @@
 /**
 * DB class
 */
+namespace Opencart\System\Library;
 class DB {
 	private $adaptor;
 
@@ -25,12 +26,12 @@ class DB {
 	 *
  	*/
 	public function __construct($adaptor, $hostname, $username, $password, $database, $port = NULL) {
-		$class = 'DB\\' . $adaptor;
+		$class = 'Opencart\System\Library\DB\\' . $adaptor;
 
 		if (class_exists($class)) {
 			$this->adaptor = new $class($hostname, $username, $password, $database, $port);
 		} else {
-			throw new \Exception('Error: Could not load database adaptor ' . $adaptor . '!');
+			error_log('Error: Could not load database adaptor ' . $adaptor . '!');
 		}
 	}
 

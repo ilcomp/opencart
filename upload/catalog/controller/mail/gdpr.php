@@ -1,5 +1,6 @@
 <?php
-class ControllerMailGdpr extends Controller {
+namespace Opencart\Application\Controller\Mail;
+class Gdpr extends \Opencart\System\Engine\Controller {
 	// catalog/model/account/gdpr/addGdpr
 	public function index(&$route, &$args, &$output) {
 		// $args[0] $code
@@ -18,14 +19,14 @@ class ControllerMailGdpr extends Controller {
 
 		$data['button_confirm'] = $this->language->get('button_' . $args[2]);
 
-		$data['confirm'] = $this->url->link('information/gdpr/success', 'language=' . $this->config->get('config_language') . '&code=' . $args[0]);
+		$data['confirm'] = $this->url->link('information/gdpr|success', 'language=' . $this->config->get('config_language') . '&code=' . $args[0]);
 
 		$data['ip'] = $this->request->server['REMOTE_ADDR'];
 
 		$data['store_name'] = html_entity_decode($this->config->get('config_name'), ENT_QUOTES, 'UTF-8');
 		$data['store_url'] = $this->config->get('config_url');
 
-		$mail = new Mail($this->config->get('config_mail_engine'));
+		$mail = new \Opencart\System\Library\Mail($this->config->get('config_mail_engine'));
 		$mail->parameter = $this->config->get('config_mail_parameter');
 		$mail->smtp_hostname = $this->config->get('config_mail_smtp_hostname');
 		$mail->smtp_username = $this->config->get('config_mail_smtp_username');

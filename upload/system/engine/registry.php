@@ -10,22 +10,23 @@
 /**
 * Registry class
 */
-final class Registry {
-	private $data = array();
+namespace Opencart\System\Engine;
+class Registry {
+	private $data = [];
 
 	/**
-     * 
+     * Get
      *
      * @param	string	$key
 	 * 
 	 * @return	mixed
      */
 	public function get($key) {
-		return (isset($this->data[$key]) ? $this->data[$key] : null);
+		return (isset($this->data[$key]) ? $this->data[$key] : '');
 	}
 
     /**
-     * 
+     * Set
      *
      * @param	string	$key
 	 * @param	string	$value
@@ -35,7 +36,7 @@ final class Registry {
 	}
 	
     /**
-     * 
+     * Has
      *
      * @param	string	$key
 	 *

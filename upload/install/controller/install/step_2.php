@@ -1,6 +1,7 @@
 <?php
-class ControllerInstallStep2 extends Controller {
-	private $error = array();
+namespace Opencart\Application\Controller\Install;
+class Step2 extends \Opencart\System\Engine\Controller {
+	private $error = [];
 
 	public function index() {
 		$this->load->language('install/step_2');
@@ -56,7 +57,7 @@ class ControllerInstallStep2 extends Controller {
 
 		$data['php_version'] = phpversion();
 
-		if (version_compare(phpversion(), '7.0.0', '<')) {
+		if (version_compare(phpversion(), '7.3.0', '<')) {
 			$data['version'] = false;
 		} else {
 			$data['version'] = true;
@@ -67,11 +68,11 @@ class ControllerInstallStep2 extends Controller {
 		$data['file_uploads'] = ini_get('file_uploads');
 		$data['session_auto_start'] = ini_get('session_auto_start');
 
-		$db = array(
+		$db = [
 			'mysqli',
 			'pgsql',
 			'pdo'
-		);
+		];
 
 		if (!array_filter($db, 'extension_loaded')) {
 			$data['db'] = false;
@@ -121,7 +122,7 @@ class ControllerInstallStep2 extends Controller {
 	}
 
 	private function validate() {
-		if (version_compare(phpversion(), '7.0.0', '<')) {
+		if (version_compare(phpversion(), '7.3.0', '<')) {
 			$this->error['warning'] = $this->language->get('error_version');
 		}
 
@@ -133,11 +134,11 @@ class ControllerInstallStep2 extends Controller {
 			$this->error['warning'] = $this->language->get('error_session');
 		}
 
-		$db = array(
+		$db = [
 			'mysqli',
 			'pdo',
 			'pgsql'
-		);
+		];
 
 		if (!array_filter($db, 'extension_loaded')) {
 			$this->error['warning'] = $this->language->get('error_db');

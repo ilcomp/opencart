@@ -89,7 +89,9 @@
                           <td class="text-left">
                             <div class="input-group input-group-sm">
                               <select name="layout_module[{{ module_row }}][code]" class="form-control input-sm">
+
                                 {% for extension in extensions %}
+
                                   <optgroup label="{{ extension.name }}">
                                     {% if not extension.module %}
                                       {% if extension.code == layout_module.code %}
@@ -98,6 +100,7 @@
                                         <option value="{{ extension.code }}">{{ extension.name }}</option>
                                       {% endif %}
                                     {% else %}
+
                                       {% for module in extension.module %}
                                         {% if module.code == layout_module.code %}
                                           <option value="{{ module.code }}" selected="selected">{{ module.name }}</option>
@@ -105,9 +108,12 @@
                                           <option value="{{ module.code }}">{{ module.name }}</option>
                                         {% endif %}
                                       {% endfor %}
+
                                     {% endif %}
+
                                   </optgroup>
                                 {% endfor %}
+
                               </select> <input type="hidden" name="layout_module[{{ module_row }}][position]" value="{{ layout_module.position }}"/> <input type="hidden" name="layout_module[{{ module_row }}][sort_order]" value="{{ layout_module.sort_order }}"/>
                               <div class="input-group-append">
                                 <a href="{{ layout_module.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary btn-sm"><i class="fas fa-pencil-alt fa-fw"></i></a>
@@ -417,6 +423,8 @@ function addModule(type) {
 
 		$('#module-' + type + ' tbody select[name=\'layout_module[' + module_row + '][code]\']').val($('#module-' + type + ' tfoot select').val());
 
+		$('#module-' + type + ' tfoot select').val('');
+
 		$('#module-' + type + ' select[name*=\'code\']').trigger('change');
 
 		$('#module-' + type + ' tbody input[name*=\'sort_order\']').each(function(i, element) {
@@ -433,12 +441,10 @@ $('#module-column-left, #module-column-right, #module-content-top, #module-conte
 	var part = this.value.split('.');
 
 	if (!part[1]) {
-		$(this).parent().find('a').attr('href', 'index.php?route=extension/module/' + part[0] + '&user_token={{ user_token }}');
+		$(this).parent().find('a').attr('href', 'index.php?route=extension/module|' + part[0] + '&user_token={{ user_token }}');
 	} else {
-		$(this).parent().find('a').attr('href', 'index.php?route=extension/module/' + part[0] + '&user_token={{ user_token }}&module_id=' + part[1]);
+		$(this).parent().find('a').attr('href', 'index.php?route=extension/module|' + part[0] + '&user_token={{ user_token }}&module_id=' + part[1]);
 	}
 });
-
-$('#module-column-left, #module-column-right, #module-content-top, #module-content-bottom').trigger('change');
 //--></script>
 {{ footer }}

@@ -1,7 +1,8 @@
 <?php
-class ModelToolImage extends Model {
+namespace Opencart\Application\Model\Tool;
+class Image extends \Opencart\System\Engine\Model {
 	public function resize($filename, $width, $height) {
-		if (!is_file(DIR_IMAGE . $filename) || substr(str_replace('\\', '/', realpath(DIR_IMAGE . $filename)), 0, strlen(DIR_IMAGE)) != str_replace('\\', '/', DIR_IMAGE)) {
+		if (!is_file(DIR_IMAGE . $filename) || get_path(DIR_IMAGE . $filename, DIR_IMAGE) != str_replace('\\', '/', DIR_IMAGE)) {
 			return;
 		}
 
@@ -30,7 +31,7 @@ class ModelToolImage extends Model {
 			}
 
 			if ($width_orig != $width || $height_orig != $height) {
-				$image = new Image(DIR_IMAGE . $image_old);
+				$image = new \Opencart\System\library\Image(DIR_IMAGE . $image_old);
 				$image->resize($width, $height);
 				$image->save(DIR_IMAGE . $image_new);
 			} else {
@@ -38,7 +39,7 @@ class ModelToolImage extends Model {
 			}
 		}
 		
-		$image_new = str_replace(' ', '%20', $image_new);  // fix bug when attach image on email (gmail.com). it is automatic changing space " " to +
+		$image_new = str_replace(' ', '%20', $image_new);  // fix bug when attach image on email (gmail.com). it is automatically changing space from " " to +
 		
 		return $this->config->get('config_url') . 'image/' . $image_new;
 	}

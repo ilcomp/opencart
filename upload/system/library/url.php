@@ -11,11 +11,12 @@
 /**
  * URL class.
  */
+namespace Opencart\System\Library;
 class Url {
 	/** @var string */
 	private $url;
 	/** @var Controller[] */
-	private $rewrite = array();
+	private $rewrite = [];
 
 	/**
 	 * Constructor.
@@ -28,7 +29,7 @@ class Url {
 	}
 
 	/**
-	 *	Add a rewrite method to the URL system
+	 * Add a rewrite method to the URL system
 	 *
 	 * @param Controller $rewrite
 	 *
@@ -58,7 +59,7 @@ class Url {
 			}
 
 			if (is_array($args)) {
-				$url .= $amp . http_build_query($args, '', $amp);
+				$url .= $amp . str_replace('%2F', '/', http_build_query($args, '', $amp));
 			} else {
 				$url .= str_replace('&', $amp, '&' . ltrim($args, '&'));
 			}

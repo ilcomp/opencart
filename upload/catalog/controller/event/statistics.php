@@ -1,5 +1,6 @@
 <?php
-class ControllerEventStatistics extends Controller {
+namespace Opencart\Application\Controller\Event;
+class Statistics extends \Opencart\System\Engine\Controller {
 	// catalog/model/catalog/review/addReview/after
 	public function addReview(&$route, &$args, &$output) {
 		$this->load->model('report/statistics');
@@ -7,15 +8,15 @@ class ControllerEventStatistics extends Controller {
 		$this->model_report_statistics->addValue('review', 1);	
 	}
 		
-	// catalog/model/account/return/addReturn/after
+	// catalog/model/account/returns/addReturn/after
 	public function addReturn(&$route, &$args, &$output) {
 		$this->load->model('report/statistics');
 
 		$this->model_report_statistics->addValue('return', 1);
 	}
 	
-	// catalog/model/checkout/order/addOrderHistory/before
-	public function addOrderHistory(&$route, &$args) {
+	// catalog/model/checkout/order/addHistory/before
+	public function addHistory(&$route, &$args) {
 		$this->load->model('checkout/order');
 				
 		$order_info = $this->model_checkout_order->getOrder($args[0]);

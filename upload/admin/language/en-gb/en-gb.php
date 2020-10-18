@@ -27,6 +27,20 @@ $_['text_loading']                  = 'Loading...';
 $_['text_no_results']               = 'No results!';
 $_['text_confirm']                  = 'Are you sure?';
 $_['text_home']                     = 'Home';
+$_['text_just_now']                 = 'just now';
+$_['text_seconds_ago']              = '%s seconds ago';
+$_['text_minute_ago']               = '%s minute ago';
+$_['text_minutes_ago']              = '%s minutes ago';
+$_['text_hour_ago']                 = '%s hour ago';
+$_['text_hours_ago']                = '%s hours ago';
+$_['text_day_ago']                  = '%s day ago';
+$_['text_days_ago']                 = '%s days ago';
+$_['text_week_ago']                 = '%s week ago';
+$_['text_weeks_ago']                = '%s weeks ago';
+$_['text_month_ago']                = '%s month ago';
+$_['text_months_ago']               = '%s onths ago';
+$_['text_year_ago']                 = '%s year ago';
+$_['text_years_ago']                = '%s years ago';
 
 // Button
 $_['button_add']                    = 'Add New';
@@ -68,9 +82,9 @@ $_['button_special_add']            = 'Add Special';
 $_['button_image_add']              = 'Add Image';
 $_['button_geo_zone_add']           = 'Add Geo Zone';
 $_['button_history_add']            = 'Add History';
+$_['button_transaction_add']        = 'Add Transaction';
 $_['button_translation']            = 'Load Default Translation';
 $_['button_translation_add']        = 'Add Translation';
-$_['button_transaction_add']        = 'Add Transaction';
 $_['button_route_add']              = 'Add Route';
 $_['button_rule_add']               = 'Add Rule';
 $_['button_module_add']             = 'Add Module';
@@ -107,10 +121,10 @@ $_['button_developer']              = 'Developer Setting';
 $_['button_master']                 = 'Master Product';
 
 // Tab
-$_['tab_affiliate']                 = 'Affiliate';
 $_['tab_address']                   = 'Addresses';
 $_['tab_additional']                = 'Additional';
 $_['tab_admin']                     = 'Admin';
+$_['tab_affiliate']                 = 'Affiliate';
 $_['tab_attribute']                 = 'Attribute';
 $_['tab_comment']                   = 'Comment';
 $_['tab_data']                      = 'Data';
@@ -161,7 +175,7 @@ $_['error_curl']                    = 'CURL: Error Code(%s): %s';
 
 /* When doing translations only include the matching language code */
 
-// Summernote
+// CKEditor
 //$_['ckeditor']                    = 'af';
 //$_['ckeditor']                    = 'ar';
 //$_['ckeditor']                    = 'az';

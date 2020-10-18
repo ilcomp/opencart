@@ -1,38 +1,62 @@
 <?php
-
-class ControllerCheckoutConfirm extends Controller {
+namespace Opencart\Application\Controller\Checkout;
+class Confirm extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$redirect = '';
+
+
+		//$this->response->redirect($this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language'), true));
+
 
 		if ($this->cart->hasShipping()) {
 			// Validate if shipping address has been set.
 			if (!isset($this->session->data['shipping_address'])) {
-				$redirect = $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language'));
+				$redirect = $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language'), true);
 			}
+
+
+
 
 			// Validate if shipping method has been set.
 			if (!isset($this->session->data['shipping_method'])) {
 				$redirect = $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language'));
 			}
+
+
+
 		} else {
 			unset($this->session->data['shipping_address']);
 			unset($this->session->data['shipping_method']);
 			unset($this->session->data['shipping_methods']);
 		}
 
+
+
 		// Validate if payment address has been set.
 		if (!isset($this->session->data['payment_address'])) {
 			$redirect = $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language'));
 		}
 
-		// Validate if payment method has been set.
-		if (!isset($this->session->data['payment_method'])) {
+
+
+
+		if (isset($this->session->data['payment_method'])) {
+			// Validate if payment method has been set.
+			$extension_info = $this->model_setting_extension->getExtensionByCode('payment', $this->session->data['payment_method']['code']);
+
+			if (!$extension_info) {
+				$redirect = $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language'));
+			}
+		} else {
 			$redirect = $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language'));
+
 		}
+
+
 
 		// Validate cart has products and has stock.
 		if ((!$this->cart->hasProducts() && empty($this->session->data['vouchers'])) || (!$this->cart->hasStock() && !$this->config->get('config_stock_checkout'))) {
-			$redirect = $this->url->link('checkout/cart', 'language=' . $this->config->get('config_language'));
+	 		$redirect = $this->url->link('checkout/cart', 'language=' . $this->config->get('config_language'));
 		}
 
 		// Validate minimum quantity requirements.
@@ -52,20 +76,22 @@ class ControllerCheckoutConfirm extends Controller {
 
 				break;
 			}
+
+
 		}
 
 		if (!$redirect) {
-			$order_data = array();
+			$order_data = [];
 
-			$totals = array();
+			$totals = [];
 			$taxes = $this->cart->getTaxes();
 			$total = 0;
 
 			$this->load->model('setting/extension');
 
-			$sort_order = array();
+			$sort_order = [];
 
-			$results = $this->model_setting_extension->getExtensions('total');
+			$results = $this->model_setting_extension->getExtensionsByType('total');
 
 			foreach ($results as $key => $value) {
 				$sort_order[$key] = $this->config->get('total_' . $value['code'] . '_sort_order');
@@ -75,14 +101,14 @@ class ControllerCheckoutConfirm extends Controller {
 
 			foreach ($results as $result) {
 				if ($this->config->get('total_' . $result['code'] . '_status')) {
-					$this->load->model('extension/total/' . $result['code']);
+					$this->load->model('extension/' . $result['extension'] . '/total/' . $result['code']);
 
 					// __call can not pass-by-reference so we get PHP to call it as an anonymous function.
-					($this->{'model_extension_total_' . $result['code']}->getTotal)($totals, $taxes, $total);
+					($this->{'model_extension_' . $result['extension'] . '_total_' . $result['code']}->getTotal)($totals, $taxes, $total);
 				}
 			}
 
-			$sort_order = array();
+			$sort_order = [];
 
 			foreach ($totals as $key => $value) {
 				$sort_order[$key] = $value['sort_order'];
@@ -91,6 +117,12 @@ class ControllerCheckoutConfirm extends Controller {
 			array_multisort($sort_order, SORT_ASC, $totals);
 
 			$order_data['totals'] = $totals;
+
+
+
+
+
+
 
 			$this->load->language('checkout/checkout');
 
@@ -133,7 +165,7 @@ class ControllerCheckoutConfirm extends Controller {
 			$order_data['payment_country'] = $this->session->data['payment_address']['country'];
 			$order_data['payment_country_id'] = $this->session->data['payment_address']['country_id'];
 			$order_data['payment_address_format'] = $this->session->data['payment_address']['address_format'];
-			$order_data['payment_custom_field'] = (isset($this->session->data['payment_address']['custom_field']) ? $this->session->data['payment_address']['custom_field'] : array());
+			$order_data['payment_custom_field'] = (isset($this->session->data['payment_address']['custom_field']) ? $this->session->data['payment_address']['custom_field'] : []);
 
 			if (isset($this->session->data['payment_method']['title'])) {
 				$order_data['payment_method'] = $this->session->data['payment_method']['title'];
@@ -160,7 +192,7 @@ class ControllerCheckoutConfirm extends Controller {
 				$order_data['shipping_country'] = $this->session->data['shipping_address']['country'];
 				$order_data['shipping_country_id'] = $this->session->data['shipping_address']['country_id'];
 				$order_data['shipping_address_format'] = $this->session->data['shipping_address']['address_format'];
-				$order_data['shipping_custom_field'] = (isset($this->session->data['shipping_address']['custom_field']) ? $this->session->data['shipping_address']['custom_field'] : array());
+				$order_data['shipping_custom_field'] = (isset($this->session->data['shipping_address']['custom_field']) ? $this->session->data['shipping_address']['custom_field'] : []);
 
 				if (isset($this->session->data['shipping_method']['title'])) {
 					$order_data['shipping_method'] = $this->session->data['shipping_method']['title'];
@@ -186,65 +218,77 @@ class ControllerCheckoutConfirm extends Controller {
 				$order_data['shipping_country'] = '';
 				$order_data['shipping_country_id'] = '';
 				$order_data['shipping_address_format'] = '';
-				$order_data['shipping_custom_field'] = array();
+				$order_data['shipping_custom_field'] = [];
 				$order_data['shipping_method'] = '';
 				$order_data['shipping_code'] = '';
 			}
 
-			$order_data['products'] = array();
+			$order_data['products'] = [];
 
 			foreach ($this->cart->getProducts() as $product) {
-				$option_data = array();
+				$option_data = [];
 
 				foreach ($product['option'] as $option) {
-					$option_data[] = array(
-						'product_option_id' => $option['product_option_id'],
+					$option_data[] = [
+						'product_option_id'       => $option['product_option_id'],
 						'product_option_value_id' => $option['product_option_value_id'],
-						'option_id' => $option['option_id'],
-						'option_value_id' => $option['option_value_id'],
-						'name' => $option['name'],
-						'value' => $option['value'],
-						'type' => $option['type']
-					);
+						'option_id'               => $option['option_id'],
+						'option_value_id'         => $option['option_value_id'],
+						'name'                    => $option['name'],
+						'value'                   => $option['value'],
+						'type'                    => $option['type']
+					];
 				}
 
-				$order_data['products'][] = array(
+				$order_data['products'][] = [
 					'product_id' => $product['product_id'],
-					'master_id' => $product['master_id'],
-					'name' => $product['name'],
-					'model' => $product['model'],
-					'option' => $option_data,
-					'download' => $product['download'],
-					'quantity' => $product['quantity'],
-					'subtract' => $product['subtract'],
-					'price' => $product['price'],
-					'total' => $product['total'],
-					'tax' => $this->tax->getTax($product['price'], $product['tax_class_id']),
-					'reward' => $product['reward']
-				);
+					'master_id'  => $product['master_id'],
+					'name' 		 => $product['name'],
+					'model' 	 => $product['model'],
+					'option' 	 => $option_data,
+					'download' 	 => $product['download'],
+					'quantity' 	 => $product['quantity'],
+					'subtract' 	 => $product['subtract'],
+					'price' 	 => $product['price'],
+					'total' 	 => $product['total'],
+					'tax' 		 => $this->tax->getTax($product['price'], $product['tax_class_id']),
+					'reward' 	 => $product['reward']
+				];
 			}
 
 			// Gift Voucher
-			$order_data['vouchers'] = array();
+			$order_data['vouchers'] = [];
 
 			if (!empty($this->session->data['vouchers'])) {
 				foreach ($this->session->data['vouchers'] as $voucher) {
-					$order_data['vouchers'][] = array(
-						'description' => $voucher['description'],
-						'code' => token(10),
-						'to_name' => $voucher['to_name'],
-						'to_email' => $voucher['to_email'],
-						'from_name' => $voucher['from_name'],
-						'from_email' => $voucher['from_email'],
+					$order_data['vouchers'][] = [
+						'description'      => $voucher['description'],
+						'code' 			   => token(10),
+						'to_name' 		   => $voucher['to_name'],
+						'to_email' 		   => $voucher['to_email'],
+						'from_name' 	   => $voucher['from_name'],
+						'from_email' 	   => $voucher['from_email'],
 						'voucher_theme_id' => $voucher['voucher_theme_id'],
-						'message' => $voucher['message'],
-						'amount' => $voucher['amount']
-					);
+						'message' 		   => $voucher['message'],
+						'amount' 		   => $voucher['amount']
+					];
 				}
 			}
 
 			$order_data['comment'] = $this->session->data['comment'];
 			$order_data['total'] = $total;
+
+
+
+
+
+
+
+			// Affiliate
+			$order_data['tracking'] = '';
+			$order_data['affiliate_id'] = 0;
+			$order_data['commission'] = 0;
+			$order_data['marketing_id'] = 0;
 
 			if (isset($this->request->cookie['tracking'])) {
 				$order_data['tracking'] = $this->request->cookie['tracking'];
@@ -252,16 +296,15 @@ class ControllerCheckoutConfirm extends Controller {
 				$subtotal = $this->cart->getSubTotal();
 
 				// Affiliate
-				$this->load->model('account/affiliate');
+				if ($this->config->get('config_affiliate_status')) {
+					$this->load->model('account/affiliate');
 
-				$affiliate_info = $this->model_account_affiliate->getAffiliateByTracking($this->request->cookie['tracking']);
+					$affiliate_info = $this->model_account_affiliate->getAffiliateByTracking($this->request->cookie['tracking']);
 
-				if ($affiliate_info) {
-					$order_data['affiliate_id'] = $affiliate_info['customer_id'];
-					$order_data['commission'] = ($subtotal / 100) * $affiliate_info['commission'];
-				} else {
-					$order_data['affiliate_id'] = 0;
-					$order_data['commission'] = 0;
+					if ($affiliate_info) {
+						$order_data['affiliate_id'] = $affiliate_info['customer_id'];
+						$order_data['commission'] = ($subtotal / 100) * $affiliate_info['commission'];
+					}
 				}
 
 				// Marketing
@@ -271,14 +314,7 @@ class ControllerCheckoutConfirm extends Controller {
 
 				if ($marketing_info) {
 					$order_data['marketing_id'] = $marketing_info['marketing_id'];
-				} else {
-					$order_data['marketing_id'] = 0;
 				}
-			} else {
-				$order_data['affiliate_id'] = 0;
-				$order_data['commission'] = 0;
-				$order_data['marketing_id'] = 0;
-				$order_data['tracking'] = '';
 			}
 
 			$order_data['language_id'] = $this->config->get('config_language_id');
@@ -313,18 +349,18 @@ class ControllerCheckoutConfirm extends Controller {
 
 			$this->load->model('tool/upload');
 
-			$frequencies = array(
-				'day' => $this->language->get('text_day'),
-				'week' => $this->language->get('text_week'),
+			$frequencies = [
+				'day' 		 => $this->language->get('text_day'),
+				'week' 		 => $this->language->get('text_week'),
 				'semi_month' => $this->language->get('text_semi_month'),
-				'month' => $this->language->get('text_month'),
-				'year' => $this->language->get('text_year'),
-			);
+				'month' 	 => $this->language->get('text_month'),
+				'year' 		 => $this->language->get('text_year')
+			];
 
-			$data['products'] = array();
+			$data['products'] = [];
 
 			foreach ($this->cart->getProducts() as $product) {
-				$option_data = array();
+				$option_data = [];
 
 				foreach ($product['option'] as $option) {
 					if ($option['type'] != 'file') {
@@ -339,10 +375,10 @@ class ControllerCheckoutConfirm extends Controller {
 						}
 					}
 
-					$option_data[] = array(
-						'name' => $option['name'],
+					$option_data[] = [
+						'name'  => $option['name'],
 						'value' => (utf8_strlen($value) > 20 ? utf8_substr($value, 0, 20) . '..' : $value)
-					);
+					];
 				}
 
 				$recurring = '';
@@ -359,43 +395,43 @@ class ControllerCheckoutConfirm extends Controller {
 					}
 				}
 
-				$data['products'][] = array(
-					'cart_id' => $product['cart_id'],
+				$data['products'][] = [
+					'cart_id'    => $product['cart_id'],
 					'product_id' => $product['product_id'],
-					'name' => $product['name'],
-					'model' => $product['model'],
-					'option' => $option_data,
-					'recurring' => $recurring,
-					'quantity' => $product['quantity'],
-					'subtract' => $product['subtract'],
-					'price' => $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']),
-					'total' => $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')) * $product['quantity'], $this->session->data['currency']),
-					'href' => $this->url->link('product/product', 'language=' . $this->config->get('config_language') . '&product_id=' . $product['product_id'])
-				);
+					'name'       => $product['name'],
+					'model'      => $product['model'],
+					'option'     => $option_data,
+					'recurring'  => $recurring,
+					'quantity'   => $product['quantity'],
+					'subtract'   => $product['subtract'],
+					'price'      => $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']),
+					'total'      => $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')) * $product['quantity'], $this->session->data['currency']),
+					'href'       => $this->url->link('product/product', 'language=' . $this->config->get('config_language') . '&product_id=' . $product['product_id'])
+				];
 			}
 
 			// Gift Voucher
-			$data['vouchers'] = array();
+			$data['vouchers'] = [];
 
 			if (!empty($this->session->data['vouchers'])) {
 				foreach ($this->session->data['vouchers'] as $voucher) {
-					$data['vouchers'][] = array(
+					$data['vouchers'][] = [
 						'description' => $voucher['description'],
-						'amount' => $this->currency->format($voucher['amount'], $this->session->data['currency'])
-					);
+						'amount'      => $this->currency->format($voucher['amount'], $this->session->data['currency'])
+					];
 				}
 			}
 
-			$data['totals'] = array();
+			$data['totals'] = [];
 
 			foreach ($totals as $total) {
-				$data['totals'][] = array(
+				$data['totals'][] = [
 					'title' => $total['title'],
-					'text' => $this->currency->format($total['value'], $this->session->data['currency'])
-				);
+					'text'  => $this->currency->format($total['value'], $this->session->data['currency'])
+				];
 			}
 
-			$data['payment'] = $this->load->controller('extension/payment/' . $this->session->data['payment_method']['code']);
+			$data['payment'] = $this->load->controller('extension/' . $extension_info['extension'] . '/payment/' . $extension_info['code']);
 		} else {
 			$data['redirect'] = str_replace('&amp;', '&', $redirect);
 		}

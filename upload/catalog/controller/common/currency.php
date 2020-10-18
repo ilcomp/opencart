@@ -1,9 +1,10 @@
 <?php
-class ControllerCommonCurrency extends Controller {
+namespace Opencart\Application\Controller\Common;
+class Currency extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$this->load->language('common/currency');
 
-		$data['action'] = $this->url->link('common/currency/currency', 'language=' . $this->config->get('config_language'));
+		$data['action'] = $this->url->link('common/currency|currency', 'language=' . $this->config->get('config_language'));
 
 		$data['code'] = $this->session->data['currency'];
 
@@ -15,10 +16,10 @@ class ControllerCommonCurrency extends Controller {
 			$route = $this->config->get('action_default');
 		}
 
-		unset($url_data['_route_']);
 		unset($url_data['route']);
+		unset($url_data['_route_']);
 
-		$data['currencies'] = array();
+		$data['currencies'] = [];
 
 		$this->load->model('localisation/currency');
 
@@ -26,12 +27,12 @@ class ControllerCommonCurrency extends Controller {
 
 		foreach ($results as $result) {
 			if ($result['status']) {
-				$data['currencies'][] = array(
+				$data['currencies'][] = [
 					'title'        => $result['title'],
 					'code'         => $result['code'],
 					'symbol_left'  => $result['symbol_left'],
 					'symbol_right' => $result['symbol_right']
-				);
+				];
 			}
 		}
 

@@ -1,5 +1,6 @@
 <?php
-class ControllerUpgradeUpgrade extends Controller {
+namespace Opencart\Application\Controller\Upgrade;
+class Upgrade extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$this->load->language('upgrade/upgrade');
 
@@ -36,7 +37,7 @@ class ControllerUpgradeUpgrade extends Controller {
 	public function next() {
 		$this->load->language('upgrade/upgrade');
 				
-		$json = array();
+		$json = [];
 
 		if (isset($this->request->get['step'])) {
 			$step = $this->request->get['step'];
@@ -56,7 +57,7 @@ class ControllerUpgradeUpgrade extends Controller {
 			
 				$json['success'] = sprintf($this->language->get('text_progress'), basename($files[$step - 1], '.php'), $step, count($files));
 			
-				$json['next'] = str_replace('&amp;', '&', $this->url->link('upgrade/upgrade/next', 'step=' . ($step + 1)));
+				$json['next'] = str_replace('&amp;', '&', $this->url->link('upgrade/upgrade|next', 'step=' . ($step + 1)));
 			} catch(Exception $exception) {
 				$json['error'] = sprintf($this->language->get('error_exception'), $exception->getCode(), $exception->getMessage(), $exception->getFile(), $exception->getLine());
 			}		
