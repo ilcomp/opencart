@@ -1,84 +1,101 @@
 <?php
 /**
- * @package        OpenCart
- * @author        Daniel Kerr
- * @copyright    Copyright (c) 2005 - 2017, OpenCart, Ltd. (https://www.opencart.com/)
- * @license        https://opensource.org/licenses/GPL-3.0
- * @link        https://www.opencart.com
+ * @package     OpenCart
+ *
+ * @author      Daniel Kerr
+ * @copyright   Copyright (c) 2005 - 2022, OpenCart, Ltd. (https://www.opencart.com/)
+ * @license     https://opensource.org/licenses/GPL-3.0
+ *
+ * @see        https://www.opencart.com
  */
-
+namespace Opencart\System\Engine;
 /**
- * Action class
+ * Class Action
+ *
+ * Allows the stored action to be passed around and be executed by the framework and events.
+ *
+ * @package Opencart\System\Engine
  */
 class Action {
-	private $id;
-	private $route;
-	private $method = 'index';
+	/**
+	 * @var string
+	 */
+	private string $route;
+
+	/**
+	 * @var string
+	 */
+	private string $controller;
+
+	/**
+	 * @var string
+	 */
+	private string $method;
 
 	/**
 	 * Constructor
 	 *
-	 * @param    string $route
+	 * @param string $route
 	 */
-	public function __construct($route) {
-		$this->id = $route;
+	public function __construct(string $route) {
+		$this->route = preg_replace('/[^a-zA-Z0-9_\/\.]/', '', $route);
 
-		$parts = explode('/', preg_replace('/[^a-zA-Z0-9_\/]/', '', (string)$route));
+		$pos = strrpos($route, '.');
 
-		// Break apart the route
-		while ($parts) {
-			$file = DIR_APPLICATION . 'controller/' . implode('/', $parts) . '.php';
-
-			if (is_file($file)) {
-				$this->route = implode('/', $parts);
-
-				break;
-			} else {
-				$this->method = array_pop($parts);
-			}
+		if ($pos !== false) {
+			$this->controller = substr($route, 0, $pos);
+			$this->method = substr($route, $pos + 1);
+		} else {
+			$this->controller = $route;
+			$this->method = 'index';
 		}
 	}
 
 	/**
+	 * Get Id
 	 *
-	 *
-	 * @return    string
-	 *
+	 * @return string
 	 */
-	public function getId() {
-		return $this->id;
+	public function getId(): string {
+		return $this->route;
 	}
 
 	/**
+	 * Execute
 	 *
+	 * @param \Opencart\System\Engine\Registry $registry
+	 * @param array<mixed>                     $args
 	 *
-	 * @param    object $registry
-	 * @param    array $args
+	 * @return mixed
 	 */
-	public function execute($registry, array &$args = array()) {
+	public function execute(\Opencart\System\Engine\Registry $registry, array &$args = []) {
 		// Stop any magical methods being called
 		if (substr($this->method, 0, 2) == '__') {
 			return new \Exception('Error: Calls to magic methods are not allowed!');
 		}
 
-		$file = DIR_APPLICATION . 'controller/' . $this->route . '.php';
-		$class = 'Controller' . preg_replace('/[^a-zA-Z0-9]/', '', $this->route);
+		// Create a new key to store the model object
+		$key = 'fallback_controller_' . str_replace('/', '_', $this->controller);
 
-		// Initialize the class
-		if (is_file($file)) {
-			include_once($file);
-
-			$controller = new $class($registry);
+		if (!$registry->has($key)) {
+			$object = $registry->get('factory')->controller($this->controller);
 		} else {
-			return new \Exception('Error: Could not call ' . $this->route . '/' . $this->method . '!');
+			$object = $registry->get($key);
 		}
 
-		$reflection = new ReflectionClass($class);
-
-		if ($reflection->hasMethod($this->method) && $reflection->getMethod($this->method)->getNumberOfRequiredParameters() <= count($args)) {
-			return call_user_func_array(array($controller, $this->method), $args);
+		if ($object instanceof \Opencart\System\Engine\Controller) {
+			$registry->set($key, $object);
 		} else {
-			return new \Exception('Error: Could not call ' . $this->route . '/' . $this->method . '!');
+			// If action cannot be executed, we return an error object.
+			return new \Exception('Error: Could not load controller ' . $this->route . '!');
+		}
+
+		$callable = [$object, $this->method];
+
+		if (is_callable($callable)) {
+			return $callable(...$args);
+		} else {
+			return new \Exception('Error: Could not call controller ' . $this->route . '!');
 		}
 	}
 }

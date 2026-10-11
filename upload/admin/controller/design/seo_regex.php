@@ -1,128 +1,70 @@
 <?php
-class ControllerDesignSeoRegex extends Controller {
-	private $error = array();
-
-	public function index() {
+namespace Opencart\Admin\Controller\Design;
+/**
+ * Class SEO Regex
+ *
+ * @package Opencart\Admin\Controller\Design
+ */
+class SeoRegex extends \Opencart\System\Engine\Controller {
+	/**
+	 * Index
+	 *
+	 * @return void
+	 */
+	public function index(): void {
 		$this->load->language('design/seo_regex');
 
 		$this->document->setTitle($this->language->get('heading_title'));
 
-		$this->load->model('design/seo_regex');
+		$url = '';
 
-		$this->getList();
+		if (isset($this->request->get['page'])) {
+			$url .= '&page=' . $this->request->get['page'];
+		}
+
+		$data['breadcrumbs'] = [];
+
+		$data['breadcrumbs'][] = [
+			'text' => $this->language->get('text_home'),
+			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'])
+		];
+
+		$data['breadcrumbs'][] = [
+			'text' => $this->language->get('heading_title'),
+			'href' => $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url)
+		];
+
+		$data['add'] = $this->url->link('design/seo_regex.form', 'user_token=' . $this->session->data['user_token'] . $url);
+		$data['delete'] = $this->url->link('design/seo_regex.delete', 'user_token=' . $this->session->data['user_token']);
+
+		$data['list'] = $this->getList();
+
+		$data['user_token'] = $this->session->data['user_token'];
+
+		$data['header'] = $this->load->controller('common/header');
+		$data['column_left'] = $this->load->controller('common/column_left');
+		$data['footer'] = $this->load->controller('common/footer');
+
+		$this->response->setOutput($this->load->view('design/seo_regex', $data));
 	}
 
-	public function add() {
+	/**
+	 * List
+	 *
+	 * @return void
+	 */
+	public function list(): void {
 		$this->load->language('design/seo_regex');
 
-		$this->document->setTitle($this->language->get('heading_title'));
-
-		$this->load->model('design/seo_regex');
-
-		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-			$this->model_design_seo_regex->addSeoRegex($this->request->post);
-
-			$this->session->data['success'] = $this->language->get('text_success');
-
-			$url = '';
-
-			if (isset($this->request->get['sort'])) {
-				$url .= '&sort=' . (string)$this->request->get['sort'];
-			}
-
-			if (isset($this->request->get['order'])) {
-				$url .= '&order=' . (string)$this->request->get['order'];
-			}
-
-			if (isset($this->request->get['page'])) {
-				$url .= '&page=' . (int)$this->request->get['page'];
-			}
-
-			$this->response->redirect($this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url));
-		}
-
-		$this->getForm();
+		$this->response->setOutput($this->getList());
 	}
 
-	public function edit() {
-		$this->load->language('design/seo_regex');
-
-		$this->document->setTitle($this->language->get('heading_title'));
-
-		$this->load->model('design/seo_regex');
-
-		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-			$this->model_design_seo_regex->editSeoRegex($this->request->get['seo_regex_id'], $this->request->post);
-
-			$this->session->data['success'] = $this->language->get('text_success');
-
-			$url = '';
-
-			if (isset($this->request->get['sort'])) {
-				$url .= '&sort=' . (string)$this->request->get['sort'];
-			}
-
-			if (isset($this->request->get['order'])) {
-				$url .= '&order=' . (string)$this->request->get['order'];
-			}
-
-			if (isset($this->request->get['page'])) {
-				$url .= '&page=' . (int)$this->request->get['page'];
-			}
-
-			$this->response->redirect($this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url));
-		}
-
-		$this->getForm();
-	}
-
-	public function delete() {
-		$this->load->language('design/seo_regex');
-
-		$this->document->setTitle($this->language->get('heading_title'));
-
-		$this->load->model('design/seo_regex');
-
-		if (isset($this->request->post['selected']) && $this->validateDelete()) {
-			foreach ($this->request->post['selected'] as $seo_regex_id) {
-				$this->model_design_seo_regex->deleteSeoRegex($seo_regex_id);
-			}
-
-			$this->session->data['success'] = $this->language->get('text_success');
-
-			$url = '';
-
-			if (isset($this->request->get['sort'])) {
-				$url .= '&sort=' . (string)$this->request->get['sort'];
-			}
-
-			if (isset($this->request->get['order'])) {
-				$url .= '&order=' . (string)$this->request->get['order'];
-			}
-
-			if (isset($this->request->get['page'])) {
-				$url .= '&page=' . (int)$this->request->get['page'];
-			}
-
-			$this->response->redirect($this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url));
-		}
-
-		$this->getList();
-	}
-
-	protected function getList() {
-		if (isset($this->request->get['sort'])) {
-			$sort = (string)$this->request->get['sort'];
-		} else {
-			$sort = 'name';
-		}
-
-		if (isset($this->request->get['order'])) {
-			$order = (string)$this->request->get['order'];
-		} else {
-			$order = 'ASC';
-		}
-
+	/**
+	 * Get List
+	 *
+	 * @return string
+	 */
+	public function getList(): string {
 		if (isset($this->request->get['page'])) {
 			$page = (int)$this->request->get['page'];
 		} else {
@@ -131,216 +73,120 @@ class ControllerDesignSeoRegex extends Controller {
 
 		$url = '';
 
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . (string)$this->request->get['sort'];
-		}
-
-		if (isset($this->request->get['order'])) {
-			$url .= '&order=' . (string)$this->request->get['order'];
-		}
-
 		if (isset($this->request->get['page'])) {
-			$url .= '&page=' . (int)$this->request->get['page'];
+			$url .= '&page=' . $this->request->get['page'];
 		}
 
-		$data['breadcrumbs'] = array();
+		$data['action'] = $this->url->link('design/seo_regex.list', 'user_token=' . $this->session->data['user_token'] . $url);
 
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'])
-		);
+		// SEO
+		$data['seo_regexs'] = [];
 
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url)
-		);
+		$filter_data = [
+			'start' => ($page - 1) * $this->config->get('config_pagination_admin'),
+			'limit' => $this->config->get('config_pagination_admin')
+		];
 
-		$data['add'] = $this->url->link('design/seo_regex/add', 'user_token=' . $this->session->data['user_token'] . $url);
-		$data['delete'] = $this->url->link('design/seo_regex/delete', 'user_token=' . $this->session->data['user_token'] . $url);
-
-		$data['seo_regexes'] = array();
-
-		$filter_data = array(
-			'sort'  => $sort,
-			'order' => $order,
-			'start' => ($page - 1) * $this->config->get('config_pagination'),
-			'limit' => $this->config->get('config_pagination')
-		);
-
-		$seo_regex_total = $this->model_design_seo_regex->getTotalSeoRegexes($filter_data);
+		$this->load->model('design/seo_regex');
 
 		$results = $this->model_design_seo_regex->getSeoRegexes($filter_data);
 
 		foreach ($results as $result) {
-			$data['seo_regexes'][] = array(
-				'seo_regex_id' => $result['seo_regex_id'],
-				'name'         => $result['name'],
-				'key'          => $result['key'],
-				'regex'        => htmlspecialchars($result['regex'], ENT_COMPAT, 'UTF-8'),
-				'sort_order'   => $result['sort_order'],
-				'edit'         => $this->url->link('design/seo_regex/edit', 'user_token=' . $this->session->data['user_token'] . '&seo_regex_id=' . $result['seo_regex_id'] . $url)
-			);
+			$data['seo_regexs'][] = ['edit' => $this->url->link('design/seo_regex.form', 'user_token=' . $this->session->data['user_token'] . '&seo_regex_id=' . $result['seo_regex_id'] . $url)] + $result;
 		}
 
-		$data['user_token'] = $this->session->data['user_token'];
+		$seo_regex_total = $this->model_design_seo_regex->getTotalSeoRegexes();
 
-		if (isset($this->error['warning'])) {
-			$data['error_warning'] = $this->error['warning'];
-		} else {
-			$data['error_warning'] = '';
-		}
+		// Pagination
+		$data['total'] = $seo_regex_total;
+		$data['page'] = $page;
+		$data['limit'] = $this->config->get('config_pagination_admin');
+		$data['pagination'] = $this->url->link('design/seo_regex.list', 'user_token=' . $this->session->data['user_token'] . $url . '&page={page}');
 
-		if (isset($this->session->data['success'])) {
-			$data['success'] = $this->session->data['success'];
+		$data['results'] = sprintf($this->language->get('text_pagination'), ($seo_regex_total) ? (($page - 1) * $this->config->get('config_pagination_admin')) + 1 : 0, ((($page - 1) * $this->config->get('config_pagination_admin')) > ($seo_regex_total - $this->config->get('config_pagination_admin'))) ? $seo_regex_total : ((($page - 1) * $this->config->get('config_pagination_admin')) + $this->config->get('config_pagination_admin')), $seo_regex_total, ceil($seo_regex_total / $this->config->get('config_pagination_admin')));
 
-			unset($this->session->data['success']);
-		} else {
-			$data['success'] = '';
-		}
-
-		if (isset($this->request->post['selected'])) {
-			$data['selected'] = (array)$this->request->post['selected'];
-		} else {
-			$data['selected'] = array();
-		}
-
-		$url = '';
-
-		if ($order == 'ASC') {
-			$url .= '&order=DESC';
-		} else {
-			$url .= '&order=ASC';
-		}
-
-		$data['sort_name'] = $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . '&sort=name' . $url);
-		$data['sort_key'] = $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . '&sort=key' . $url);
-		$data['sort_regex'] = $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . '&sort=key' . $url);
-		$data['sort_sort_order'] = $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . '&sort=sort_order' . $url);
-
-		$url = '';
-
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . (string)$this->request->get['sort'];
-		}
-
-		if (isset($this->request->get['order'])) {
-			$url .= '&order=' . (string)$this->request->get['order'];
-		}
-
-		$data['pagination'] = $this->load->controller('common/pagination', array(
-			'total' => $seo_regex_total,
-			'page'  => $page,
-			'limit' => $this->config->get('config_pagination'),
-			'url'   => $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url . '&page={page}')
-		));
-
-		$data['results'] = sprintf($this->language->get('text_pagination'), ($seo_regex_total) ? (($page - 1) * $this->config->get('config_pagination')) + 1 : 0, ((($page - 1) * $this->config->get('config_pagination')) > ($seo_regex_total - $this->config->get('config_pagination'))) ? $seo_regex_total : ((($page - 1) * $this->config->get('config_pagination')) + $this->config->get('config_pagination')), $seo_regex_total, ceil($seo_regex_total / $this->config->get('config_pagination')));
-
-		$data['sort'] = $sort;
-		$data['order'] = $order;
-
-		$data['header'] = $this->load->controller('common/header');
-		$data['column_left'] = $this->load->controller('common/column_left');
-		$data['footer'] = $this->load->controller('common/footer');
-
-		$this->response->setOutput($this->load->view('design/seo_regex_list', $data));
+		return $this->load->view('design/seo_regex_list', $data);
 	}
 
-	protected function getForm() {
+	/**
+	 * Form
+	 *
+	 * @return void
+	 */
+	public function form(): void {
+		$this->load->language('design/seo_regex');
+
+		$this->document->setTitle($this->language->get('heading_title'));
+
 		$data['text_form'] = !isset($this->request->get['seo_regex_id']) ? $this->language->get('text_add') : $this->language->get('text_edit');
-
-		if (isset($this->error['warning'])) {
-			$data['error_warning'] = $this->error['warning'];
-		} else {
-			$data['error_warning'] = '';
-		}
-
-		if (isset($this->error['name'])) {
-			$data['error_name'] = $this->error['name'];
-		} else {
-			$data['error_name'] = '';
-		}
-
-		if (isset($this->error['key'])) {
-			$data['error_key'] = $this->error['key'];
-		} else {
-			$data['error_key'] = '';
-		}
-
-		if (isset($this->error['regex'])) {
-			$data['error_regex'] = $this->error['regex'];
-		} else {
-			$data['error_regex'] = '';
-		}
 
 		$url = '';
 
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . (string)$this->request->get['sort'];
-		}
-
-		if (isset($this->request->get['order'])) {
-			$url .= '&order=' . (string)$this->request->get['order'];
-		}
-
 		if (isset($this->request->get['page'])) {
-			$url .= '&page=' . (int)$this->request->get['page'];
+			$url .= '&page=' . $this->request->get['page'];
 		}
 
-		$data['breadcrumbs'] = array();
+		$data['breadcrumbs'] = [];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_home'),
 			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'])
-		);
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('heading_title'),
 			'href' => $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url)
-		);
+		];
 
-		if (!isset($this->request->get['seo_regex_id'])) {
-			$data['action'] = $this->url->link('design/seo_regex/add', 'user_token=' . $this->session->data['user_token'] . $url);
-		} else {
-			$data['action'] = $this->url->link('design/seo_regex/edit', 'user_token=' . $this->session->data['user_token'] . '&seo_regex_id=' . $this->request->get['seo_regex_id'] . $url);
-		}
+		$data['save'] = $this->url->link('design/seo_regex.save', 'user_token=' . $this->session->data['user_token']);
+		$data['back'] = $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url);
 
-		$data['cancel'] = $this->url->link('design/seo_regex', 'user_token=' . $this->session->data['user_token'] . $url);
+		if (isset($this->request->get['seo_regex_id'])) {
+			$this->load->model('design/seo_regex');
 
-		if (isset($this->request->get['seo_regex_id']) && ($this->request->server['REQUEST_METHOD'] != 'POST')) {
 			$seo_regex_info = $this->model_design_seo_regex->getSeoRegex($this->request->get['seo_regex_id']);
 		}
 
-		if (isset($this->request->post['name'])) {
-			$data['name'] = $this->request->post['name'];
-		} elseif (!empty($seo_regex_info)) {
-			$data['name'] = $seo_regex_info['name'];
+		if (!empty($seo_regex_info)) {
+			$data['seo_regex_id'] = $seo_regex_info['seo_regex_id'];
 		} else {
-			$data['name'] = '';
+			$data['seo_regex_id'] = 0;
 		}
 
-		if (isset($this->request->post['key'])) {
-			$data['key'] = $this->request->post['key'];
-		} elseif (!empty($seo_regex_info)) {
+		if (!empty($seo_regex_info)) {
 			$data['key'] = $seo_regex_info['key'];
 		} else {
 			$data['key'] = '';
 		}
 
-		if (isset($this->request->post['regex'])) {
-			$data['regex'] = html_entity_decode($this->request->post['regex'], ENT_COMPAT, 'UTF-8');
-		} elseif (!empty($seo_regex_info)) {
-			$data['regex'] = $seo_regex_info['regex'];
+		if (!empty($seo_regex_info)) {
+			$data['match'] = $seo_regex_info['match'];
 		} else {
-			$data['regex'] = '';
+			$data['match'] = '';
 		}
 
-		if (isset($this->request->post['sort_order'])) {
-			$data['sort_order'] = $this->request->post['sort_order'];
-		} elseif (!empty($seo_regex_info)) {
+		if (!empty($seo_regex_info)) {
+			$data['replace'] = $seo_regex_info['replace'];
+		} else {
+			$data['replace'] = '';
+		}
+
+		if (!empty($seo_regex_info)) {
+			$data['keyword'] = $seo_regex_info['keyword'];
+		} else {
+			$data['keyword'] = '';
+		}
+
+		if (!empty($seo_regex_info)) {
+			$data['value'] = $seo_regex_info['value'];
+		} else {
+			$data['value'] = '';
+		}
+
+		if (!empty($seo_regex_info)) {
 			$data['sort_order'] = $seo_regex_info['sort_order'];
 		} else {
-			$data['sort_order'] = '';
+			$data['sort_order'] = 0;
 		}
 
 		$data['header'] = $this->load->controller('common/header');
@@ -350,31 +196,80 @@ class ControllerDesignSeoRegex extends Controller {
 		$this->response->setOutput($this->load->view('design/seo_regex_form', $data));
 	}
 
-	protected function validateForm() {
+	/**
+	 * Save
+	 *
+	 * @return void
+	 */
+	public function save(): void {
+		$this->load->language('design/seo_regex');
+
+		$json = [];
+
 		if (!$this->user->hasPermission('modify', 'design/seo_regex')) {
-			$this->error['warning'] = $this->language->get('error_permission');
+			$json['error']['warning'] = $this->language->get('error_permission');
 		}
 
-		if (!$this->request->post['name']) {
-			$this->error['name'] = $this->language->get('error_name');
+		$required = [
+			'seo_regex_id' => 0,
+			'key'          => '',
+			'match'        => '',
+			'replace'      => '',
+			'keyword'      => '',
+			'value'        => '',
+			'sort_order'   => 0
+		];
+
+		$post_info = $this->request->post + $required;
+
+		if (!$json) {
+			$this->load->model('design/seo_regex');
+
+			if (!$post_info['seo_regex_id']) {
+				$json['seo_regex_id'] = $this->model_design_seo_regex->addSeoRegex($post_info);
+			} else {
+				$this->model_design_seo_regex->editSeoRegex($post_info['seo_regex_id'], $post_info);
+			}
+
+			$json['success'] = $this->language->get('text_success');
 		}
 
-		if (!$this->request->post['key']) {
-			$this->error['key'] = $this->language->get('error_key');
-		}
-
-		if (@preg_match('/' . html_entity_decode($this->request->post['regex'], ENT_QUOTES, 'UTF-8') . '/', null) === false) {
-			$this->error['regex'] = $this->language->get('error_regex');
-		}
-
-		return !$this->error;
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
 	}
 
-	protected function validateDelete() {
-		if (!$this->user->hasPermission('modify', 'design/seo_regex')) {
-			$this->error['warning'] = $this->language->get('error_permission');
+	/**
+	 * Delete
+	 *
+	 * @return void
+	 */
+	public function delete(): void {
+		$this->load->language('design/seo_regex');
+
+		$json = [];
+
+		if (isset($this->request->post['selected'])) {
+			$selected = (array)$this->request->post['selected'];
+		} else {
+			$selected = [];
 		}
 
-		return !$this->error;
+		if (!$this->user->hasPermission('modify', 'design/seo_regex')) {
+			$json['error'] = $this->language->get('error_permission');
+		}
+
+		if (!$json) {
+			// SEO
+			$this->load->model('design/seo_regex');
+
+			foreach ($selected as $seo_regex_id) {
+				$this->model_design_seo_regex->deleteSeoRegex($seo_regex_id);
+			}
+
+			$json['success'] = $this->language->get('text_success');
+		}
+
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
 	}
 }

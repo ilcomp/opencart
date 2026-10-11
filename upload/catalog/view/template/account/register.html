@@ -1,0 +1,62 @@
+<h1>{{ heading_title }}</h1>
+<p>{{ text_account_already | safe }}</p>
+<form-submit @ref="form">
+  <fieldset>
+    <legend>{{ text_your_details }}</legend>
+
+    <form-group @ref="firstname" required>
+      <label slot="label">{{ entry_firstname }}</label>
+      <input-text slot="input" name="firstname" value="test123"></input-text>
+    </form-group>
+
+    <form-group @ref="lastname" required>
+      <label slot="label">{{ entry_lastname }}</label>
+      <input-text slot="input" name="lastname" value="test123"></input-text>
+    </form-group>
+
+    <form-group @ref="email" required>
+      <label slot="label">{{ entry_email }}</label>
+      <input-email slot="input" name="email" value="test123@test123.com"></input-email>
+    </form-group>
+
+    {% if config_telephone_status %}
+    <form-group @ref="telephone">
+      <label slot="label">{{ entry_telephone }}</label>
+      <input-tel name="telephone" value="0123456789"{% if config_telephone_required %} required{% endif %}/>
+    </form-group>
+    {% endif %}
+
+  </fieldset>
+
+  <fieldset>
+    <legend>{{ text_your_password }}</legend>
+    <form-group @ref="password" required>
+      <label slot="label">{{ entry_password }}</label>
+      <input-password name="password" value="1234567890"></input-password>
+    </form-group>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{ text_newsletter }}</legend>
+    <div class="row mb-3">
+      <label slot="label">{{ entry_newsletter }}</label>
+      <input-switch name="newsletter" value="1" id="input-newsletter"></input-switch>
+    </div>
+  </fieldset>
+
+  {% if config_captcha %}
+  <account-captcha type="{{ config_captcha }}"></account-captcha>
+  {% endif %}
+
+  <div class="text-end">
+    {% if config_account_id %}
+
+    <label>{{ text_agree }}</label>
+    <input-switch name="agree" value="1" @ref="agree" @change="handleAgree"></input-switch>
+
+    {% endif %}
+
+    <button-submit @ref="submitter">{{ button_continue }}</button-submit>
+
+  </div>
+</form-submit>

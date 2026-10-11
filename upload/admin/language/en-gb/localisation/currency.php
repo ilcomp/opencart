@@ -28,12 +28,15 @@ $_['entry_status']         = 'Status';
 
 // Help
 $_['help_code']            = 'Do not change if this is your default currency.';
-$_['help_value']           = 'Set to 1.00000 if this is your default currency.';
+$_['help_value']           = 'The value of your default currency in the current currency unit. Set to 1 for your default currency.';
 
 // Error
 $_['error_permission']     = 'Warning: You do not have permission to modify currencies!';
+$_['error_extension']      = 'Warning: The currency extension could not be found!';
 $_['error_title']          = 'Currency Title must be between 3 and 32 characters!';
 $_['error_code']           = 'Currency Code must contain 3 characters!';
+$_['error_exists']         = 'Currency does not exist!';
+$_['error_file']           = 'File could not be found!';
 $_['error_default']        = 'Warning: This currency cannot be deleted as it is currently assigned as the default store currency!';
 $_['error_store']          = 'Warning: This currency cannot be deleted as it is currently assigned to %s stores!';
 $_['error_order']          = 'Warning: This currency cannot be deleted as it is currently assigned to %s orders!';

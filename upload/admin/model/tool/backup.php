@@ -1,22 +1,70 @@
 <?php
-class ModelToolBackup extends Model {
-	public function getTables() {
-		$table_data = array();
+namespace Opencart\Admin\Model\Tool;
+/**
+ * Class Backup
+ *
+ * Can be loaded using $this->load->model('tool/backup');
+ *
+ * @package Opencart\Admin\Model\Tool
+ */
+class Backup extends \Opencart\System\Engine\Model {
+	/**
+	 * Get Tables
+	 *
+	 * @return array<int, string>
+	 *
+	 * @example
+	 *
+	 * $this->load->model('tool/backup');
+	 *
+	 * $tables = $this->model_tool_backup->getTables();
+	 */
+	public function getTables(): array {
+		$table_data = [];
 
 		$query = $this->db->query("SHOW TABLES FROM `" . DB_DATABASE . "`");
 
 		foreach ($query->rows as $result) {
-			if (utf8_substr($result['Tables_in_' . DB_DATABASE], 0, strlen(DB_PREFIX)) == DB_PREFIX) {
-				if (isset($result['Tables_in_' . DB_DATABASE])) {
-					$table_data[] = $result['Tables_in_' . DB_DATABASE];
-				}
+			if (isset($result['Tables_in_' . DB_DATABASE]) && substr($result['Tables_in_' . DB_DATABASE], 0, strlen(DB_PREFIX)) == DB_PREFIX) {
+				$table_data[] = $result['Tables_in_' . DB_DATABASE];
 			}
 		}
 
 		return $table_data;
 	}
 
-	public function getRecords($table, $start = 0, $limit = 100) {
+	/**
+	 * Get Records
+	 *
+	 * Get the record of the database table records in the database.
+	 *
+	 * @param string $table
+	 * @param int    $start
+	 * @param int    $limit
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @example
+	 *
+	 * $this->load->model('tool/backup');
+	 *
+	 * $records = $this->model_tool_backup->getRecords($table, $start, $limit);
+	 */
+	public function getRecords(string $table, int $start = 0, int $limit = 100): array {
+		$primary_data = [];
+
+		$query = $this->db->query("SELECT COLUMN_NAME AS `name` FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '" . DB_DATABASE . "' AND TABLE_NAME = '" . $table . "' AND COLUMN_KEY = 'PRI'");
+
+		foreach ($query->rows as $result) {
+			$primary_data[] = '`' . $result['name'] . '`';
+		}
+
+		$sql = "SELECT * FROM `" . $table . "`";
+
+		if ($primary_data) {
+			$sql .= " ORDER BY " . implode(', ', $primary_data);
+		}
+
 		if ($start < 0) {
 			$start = 0;
 		}
@@ -25,20 +73,35 @@ class ModelToolBackup extends Model {
 			$limit = 10;
 		}
 
-		$query = $this->db->query("SELECT * FROM `" . $table . "` LIMIT " . (int)$start . "," . (int)$limit);
+		$query = $this->db->query($sql . " LIMIT " . (int)$start . "," . (int)$limit);
 
 		if ($query->num_rows) {
 			return $query->rows;
 		} else {
-			return array();
+			return [];
 		}
 	}
 
-	public function getTotalRecords($table) {
-		$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . $table . "`");
+	/**
+	 * Get Total Records
+	 *
+	 * Get the total number of total database table records in the database.
+	 *
+	 * @param string $table
+	 *
+	 * @return int
+	 *
+	 * @example
+	 *
+	 * $this->load->model('tool/backup');
+	 *
+	 * $record_total = $this->model_tool_backup->getTotalRecords($table);
+	 */
+	public function getTotalRecords(string $table): int {
+		$query = $this->db->query("SELECT COUNT(*) AS `total` FROM `" . $table . "`");
 
 		if ($query->num_rows) {
-			return $query->row['total'];
+			return (int)$query->row['total'];
 		} else {
 			return 0;
 		}

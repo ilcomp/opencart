@@ -1,48 +1,57 @@
 <?php
-class ControllerMarketplaceMarketplace extends Controller {
-	public function index() {
+namespace Opencart\Admin\Controller\Marketplace;
+/**
+ * Class Marketplace
+ *
+ * @package Opencart\Admin\Controller\Marketplace
+ */
+class Marketplace extends \Opencart\System\Engine\Controller {
+	/**
+	 * Index
+	 *
+	 * @return void
+	 */
+	public function index(): void {
 		$this->load->language('marketplace/marketplace');
 
-		$this->document->setTitle($this->language->get('heading_title'));
-
 		if (isset($this->request->get['filter_search'])) {
-			$filter_search = $this->request->get['filter_search'];
+			$filter_search = (string)$this->request->get['filter_search'];
 		} else {
 			$filter_search = '';
 		}
 
 		if (isset($this->request->get['filter_category'])) {
-			$filter_category = $this->request->get['filter_category'];
+			$filter_category = (string)$this->request->get['filter_category'];
 		} else {
 			$filter_category = '';
 		}
 
 		if (isset($this->request->get['filter_license'])) {
-			$filter_license = $this->request->get['filter_license'];
+			$filter_license = (string)$this->request->get['filter_license'];
 		} else {
 			$filter_license = '';
 		}
 
 		if (isset($this->request->get['filter_rating'])) {
-			$filter_rating = $this->request->get['filter_rating'];
+			$filter_rating = (int)$this->request->get['filter_rating'];
 		} else {
 			$filter_rating = '';
 		}
 
 		if (isset($this->request->get['filter_member_type'])) {
-			$filter_member_type = $this->request->get['filter_member_type'];
+			$filter_member_type = (string)$this->request->get['filter_member_type'];
 		} else {
 			$filter_member_type = '';
 		}
 
 		if (isset($this->request->get['filter_member'])) {
-			$filter_member = $this->request->get['filter_member'];
+			$filter_member = (string)$this->request->get['filter_member'];
 		} else {
 			$filter_member = '';
 		}
 
 		if (isset($this->request->get['sort'])) {
-			$sort = $this->request->get['sort'];
+			$sort = (string)$this->request->get['sort'];
 		} else {
 			$sort = 'date_modified';
 		}
@@ -53,469 +62,335 @@ class ControllerMarketplaceMarketplace extends Controller {
 			$page = 1;
 		}
 
-		$url = '';
+		$this->document->setTitle($this->language->get('heading_title'));
 
-		if (isset($this->request->get['filter_search'])) {
-			$url .= '&filter_search=' . $this->request->get['filter_search'];
-		}
+		$allowed = [
+			'filter_search',
+			'filter_category',
+			'filter_license',
+			'filter_rating',
+			'filter_member_type',
+			'filter_member',
+			'sort',
+			'page'
+		];
 
-		if (isset($this->request->get['filter_category'])) {
-			$url .= '&filter_category=' . $this->request->get['filter_category'];
-		}
+		$url = '&' . http_build_query(array_intersect_key($this->request->get, array_flip($allowed)));
 
-		if (isset($this->request->get['filter_license'])) {
-			$url .= '&filter_license=' . $this->request->get['filter_license'];
-		}
+		$data['breadcrumbs'] = [];
 
-		if (isset($this->request->get['filter_rating'])) {
-			$url .= '&filter_rating=' . $this->request->get['filter_rating'];
-		}
-
-		if (isset($this->request->get['filter_member_type'])) {
-			$url .= '&filter_member_type=' . $this->request->get['filter_member_type'];
-		}
-
-		if (isset($this->request->get['filter_member'])) {
-			$url .= '&filter_member=' . $this->request->get['filter_member'];
-		}
-
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . $this->request->get['sort'];
-		}
-
-		if (isset($this->request->get['page'])) {
-			$url .= '&page=' . $this->request->get['page'];
-		}
-
-		$data['breadcrumbs'] = array();
-
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_home'),
 			'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'])
-		);
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('heading_title'),
 			'href' => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url)
-		);
-		
-		$time = time();
-		
-		// We create a hash from the data in a similar method to how amazon does things.
-		$string  = 'api/marketplace/list' . "\n";
-		$string .= $this->config->get('opencart_username') . "\n";
-		$string .= $this->request->server['HTTP_HOST'] . "\n";
-		$string .= VERSION . "\n";
-		$string .= $time . "\n";
+		];
 
-		$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), 1));
+		$data['signature'] = $this->config->get('opencart_username') && $this->config->get('opencart_secret');
 
-		$url  = '&username=' . urlencode($this->config->get('opencart_username'));
-		$url .= '&domain=' . $this->request->server['HTTP_HOST'];
-		$url .= '&version=' . urlencode(VERSION);
-		$url .= '&time=' . $time;
-		$url .= '&signature=' . rawurlencode($signature);
-
-		if (isset($this->request->get['filter_search'])) {
-			$url .= '&filter_search=' . urlencode($this->request->get['filter_search']);
-		}
-
-		if (isset($this->request->get['filter_category'])) {
-			$url .= '&filter_category=' . $this->request->get['filter_category'];
-		}
-
-		if (isset($this->request->get['filter_license'])) {
-			$url .= '&filter_license=' . $this->request->get['filter_license'];
-		}
-
-		if (isset($this->request->get['filter_rating'])) {
-			$url .= '&filter_rating=' . $this->request->get['filter_rating'];
-		}
-
-		if (isset($this->request->get['filter_member_type'])) {
-			$url .= '&filter_member_type=' . $this->request->get['filter_member_type'];
-		}
-
-		if (isset($this->request->get['filter_member'])) {
-			$url .= '&filter_member=' . urlencode($this->request->get['filter_member']);
-		}
-
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . $this->request->get['sort'];
-		}
-
-		if (isset($this->request->get['page'])) {
-			$url .= '&page=' . $this->request->get['page'];
-		}
-
-		$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace' . $url);
-
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
-		curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-		curl_setopt($curl, CURLOPT_POST, 1);
-
-		$response = curl_exec($curl);
-
-		$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-		curl_close($curl);
-
-		$response_info = json_decode($response, true);
-
-		$extension_total = $response_info['extension_total'];
-
-		$url  = '';
-
-		if (isset($this->request->get['filter_search'])) {
-			$url .= '&filter_search=' . $this->request->get['filter_search'];
-		}
-
-		if (isset($this->request->get['filter_category'])) {
-			$url .= '&filter_category=' . $this->request->get['filter_category'];
-		}
-
-		if (isset($this->request->get['filter_license'])) {
-			$url .= '&filter_license=' . $this->request->get['filter_license'];
-		}
-
-		if (isset($this->request->get['filter_rating'])) {
-			$url .= '&filter_rating=' . $this->request->get['filter_rating'];
-		}
-
-		if (isset($this->request->get['filter_member_type'])) {
-			$url .= '&filter_member_type=' . $this->request->get['filter_member_type'];
-		}
-
-		if (isset($this->request->get['filter_member'])) {
-			$url .= '&filter_member=' . $this->request->get['filter_member'];
-		}
-
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . $this->request->get['sort'];
-		}
-
-		if (isset($this->request->get['page'])) {
-			$url .= '&page=' . $this->request->get['page'];
-		}
-
-		$data['promotions'] = array();
-
-		if ($response_info['promotions'] && $page == 1) {
-			foreach ($response_info['promotions'] as $result) {
-				$data['promotions'][] = array(
-					'name'         => utf8_decode($result['name']),
-					'description'  => utf8_decode($result['description']),
-					'image'        => $result['image'],
-					'license'      => $result['license'],
-					'price'        => $result['price'],
-					'rating'       => $result['rating'],
-					'rating_total' => $result['rating_total'],
-					'href'         => $this->url->link('marketplace/marketplace/info', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $result['extension_id'] . $url)
-				);
-			}
-		}
-
-		$data['extensions'] = array();
-
-		if ($response_info['extensions']) {
-			foreach ($response_info['extensions'] as $result) {
-				$data['extensions'][] = array(
-					'name'         => utf8_decode($result['name']),
-					'description'  => utf8_decode($result['description']),
-					'image'        => $result['image'],
-					'license'      => $result['license'],
-					'price'        => $result['price'],
-					'rating'       => $result['rating'],
-					'rating_total' => $result['rating_total'],
-					'href'         => $this->url->link('marketplace/marketplace/info', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $result['extension_id'] . $url)
-				);
-			}
-		}
-
-		$data['user_token'] = $this->session->data['user_token'];
-
-		if (isset($response_info['error'])) {
-			$data['error_signature'] = $response_info['error'];
+		if (!$this->config->get('opencart_username') || !$this->config->get('opencart_secret')) {
+			$data['error_warning'] = $this->language->get('error_api');
 		} else {
-			$data['error_signature'] = '';
+			$data['error_warning'] = '';
 		}
 
 		// Categories
-		$url = '';
+		$data['categories'] = [];
 
-		if (isset($this->request->get['filter_search'])) {
-			$url .= '&filter_search=' . $this->request->get['filter_search'];
-		}
-
-		if (isset($this->request->get['filter_license'])) {
-			$url .= '&filter_license=' . $this->request->get['filter_license'];
-		}
-
-		if (isset($this->request->get['filter_rating'])) {
-			$url .= '&filter_rating=' . $this->request->get['filter_rating'];
-		}
-
-		if (isset($this->request->get['filter_member_type'])) {
-			$url .= '&filter_member_type=' . $this->request->get['filter_member_type'];
-		}
-
-		if (isset($this->request->get['filter_member'])) {
-			$url .= '&filter_member=' . $this->request->get['filter_member'];
-		}
-
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . $this->request->get['sort'];
-		}
-
-		$data['categories'] = array();
-
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_all'),
-			'value' => '',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url)
-		);
+			'value' => ''
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_theme'),
-			'value' => 'theme',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=theme' . $url)
-		);
+			'value' => 'theme'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_marketplace'),
-			'value' => 'marketplace',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=marketplace' . $url)
-		);
+			'value' => 'marketplace'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_language'),
-			'value' => 'language',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=language' . $url)
-		);
+			'value' => 'language'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_payment'),
-			'value' => 'payment',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=payment' . $url)
-		);
+			'value' => 'payment'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_shipping'),
-			'value' => 'shipping',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=shipping' . $url)
-		);
+			'value' => 'shipping'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_module'),
-			'value' => 'module',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=module' . $url)
-		);
+			'value' => 'module'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_total'),
-			'value' => 'total',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=total' . $url)
-		);
+			'value' => 'total'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_feed'),
-			'value' => 'feed',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=feed' . $url)
-		);
+			'value' => 'feed'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_report'),
-			'value' => 'report',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=report' . $url)
-		);
+			'value' => 'report'
+		];
 
-		$data['categories'][] = array(
+		$data['categories'][] = [
 			'text'  => $this->language->get('text_other'),
-			'value' => 'other',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_category=other' . $url)
-		);
+			'value' => 'other'
+		];
 
 		// Licenses
-		$url = '';
+		$data['licenses'] = [];
 
-		if (isset($this->request->get['filter_search'])) {
-			$url .= '&filter_search=' . $this->request->get['filter_search'];
-		}
-
-		if (isset($this->request->get['filter_category'])) {
-			$url .= '&filter_category=' . $this->request->get['filter_category'];
-		}
-
-		if (isset($this->request->get['filter_rating'])) {
-			$url .= '&filter_rating=' . $this->request->get['filter_rating'];
-		}
-
-		if (isset($this->request->get['filter_member_type'])) {
-			$url .= '&filter_member_type=' . $this->request->get['filter_member_type'];
-		}
-
-		if (isset($this->request->get['filter_member'])) {
-			$url .= '&filter_member=' . $this->request->get['filter_member'];
-		}
-
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . $this->request->get['sort'];
-		}
-
-		if (isset($this->request->get['page'])) {
-			$url .= '&page=' . $this->request->get['page'];
-		}
-
-		$data['licenses'] = array();
-
-		$data['licenses'][] = array(
+		$data['licenses'][] = [
 			'text'  => $this->language->get('text_all'),
 			'value' => '',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url)
-		);
+		];
 
-		$data['licenses'][] = array(
+		$data['licenses'][] = [
 			'text'  => $this->language->get('text_recommended'),
-			'value' => 'recommended',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_license=recommended' . $url)
-		);
+			'value' => 'recommended'
+		];
 
-		$data['licenses'][] = array(
+		$data['licenses'][] = [
 			'text'  => $this->language->get('text_free'),
-			'value' => 'free',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_license=free' . $url)
-		);
+			'value' => 'free'
+		];
 
-		$data['licenses'][] = array(
+		$data['licenses'][] = [
 			'text'  => $this->language->get('text_paid'),
-			'value' => 'paid',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_license=paid' . $url)
-		);
+			'value' => 'paid'
+		];
 
-		$data['licenses'][] = array(
+		$data['licenses'][] = [
 			'text'  => $this->language->get('text_purchased'),
-			'value' => 'purchased',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_license=purchased' . $url)
-		);
+			'value' => 'purchased'
+		];
 
 		// Sort
-		$url = '';
+		$data['sorts'] = [];
 
-		if (isset($this->request->get['filter_search'])) {
-			$url .= '&filter_search=' . $this->request->get['filter_search'];
-		}
-
-		if (isset($this->request->get['filter_category'])) {
-			$url .= '&filter_category=' . $this->request->get['filter_category'];
-		}
-
-		if (isset($this->request->get['filter_license'])) {
-			$url .= '&filter_license=' . $this->request->get['filter_license'];
-		}
-
-		if (isset($this->request->get['filter_rating'])) {
-			$url .= '&filter_rating=' . $this->request->get['filter_rating'];
-		}
-
-		if (isset($this->request->get['filter_member_type'])) {
-			$url .= '&filter_member_type=' . $this->request->get['filter_member_type'];
-		}
-
-		if (isset($this->request->get['filter_member'])) {
-			$url .= '&filter_member=' . $this->request->get['filter_member'];
-		}
-
-		$data['sorts'] = array();
-
-		$data['sorts'][] = array(
+		$data['sorts'][] = [
 			'text'  => $this->language->get('text_date_modified'),
-			'value' => 'date_modified',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url . '&sort=date_modified')
-		);
+			'value' => 'date_modified'
+		];
 
-		$data['sorts'][] = array(
+		$data['sorts'][] = [
 			'text'  => $this->language->get('text_date_added'),
-			'value' => 'date_added',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url . '&sort=date_added')
-		);
+			'value' => 'date_added'
+		];
 
-		$data['sorts'][] = array(
+		$data['sorts'][] = [
 			'text'  => $this->language->get('text_rating'),
-			'value' => 'rating',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url . '&sort=rating')
-		);
+			'value' => 'rating'
+		];
 
-
-		$data['sorts'][] = array(
+		$data['sorts'][] = [
 			'text'  => $this->language->get('text_name'),
-			'value' => 'name',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url . '&sort=name')
-		);
+			'value' => 'name'
+		];
 
-		$data['sorts'][] = array(
+		$data['sorts'][] = [
 			'text'  => $this->language->get('text_price'),
-			'value' => 'price',
-			'href'  => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url . '&sort=price')
-		);
+			'value' => 'price'
+		];
 
-		// Pagination
-		$url = '';
-
-		if (isset($this->request->get['filter_search'])) {
-			$url .= '&filter_search=' . $this->request->get['filter_search'];
-		}
-
-		if (isset($this->request->get['filter_category'])) {
-			$url .= '&filter_category=' . $this->request->get['filter_category'];
-		}
-
-		if (isset($this->request->get['filter_license'])) {
-			$url .= '&filter_license=' . $this->request->get['filter_license'];
-		}
-
-		if (isset($this->request->get['filter_rating'])) {
-			$url .= '&filter_rating=' . $this->request->get['filter_rating'];
-		}
-
-		if (isset($this->request->get['filter_member_type'])) {
-			$url .= '&filter_member_type=' . $this->request->get['filter_member_type'];
-		}
-
-		if (isset($this->request->get['filter_member'])) {
-			$url .= '&filter_member=' . $this->request->get['filter_member'];
-		}
-
-		if (isset($this->request->get['sort'])) {
-			$url .= '&sort=' . $this->request->get['sort'];
-		}
-
-		$data['pagination'] = $this->load->controller('common/pagination', array(
-			'total' => $extension_total,
-			'page'  => $page,
-			'limit' => 12,
-			'url'   => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url . '&page={page}')
-		));
+		$data['list'] = $this->load->controller('marketplace/marketplace.getList');
 
 		$data['filter_search'] = $filter_search;
 		$data['filter_category'] = $filter_category;
 		$data['filter_license'] = $filter_license;
 		$data['filter_member_type'] = $filter_member_type;
 		$data['filter_rating'] = $filter_rating;
+
 		$data['sort'] = $sort;
+
+		$data['user_token'] = $this->session->data['user_token'];
 
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('marketplace/marketplace_list', $data));
+		$this->response->setOutput($this->load->view('marketplace/marketplace', $data));
 	}
 
+	public function list(): void {
+		$this->load->language('marketplace/marketplace');
+
+		$this->response->setOutput($this->load->controller('marketplace/marketplace.getList'));
+	}
+
+	/**
+	 * Get List
+	 *
+	 * @return string
+	 */
+	public function getList(): string {
+		$this->load->language('marketplace/marketplace');
+
+		if (isset($this->request->get['filter_search'])) {
+			$filter_search = (string)$this->request->get['filter_search'];
+		} else {
+			$filter_search = '';
+		}
+
+		if (isset($this->request->get['filter_category'])) {
+			$filter_category = (string)$this->request->get['filter_category'];
+		} else {
+			$filter_category = '';
+		}
+
+		if (isset($this->request->get['filter_license'])) {
+			$filter_license = (string)$this->request->get['filter_license'];
+		} else {
+			$filter_license = '';
+		}
+
+		if (isset($this->request->get['filter_rating'])) {
+			$filter_rating = (int)$this->request->get['filter_rating'];
+		} else {
+			$filter_rating = '';
+		}
+
+		if (isset($this->request->get['filter_member_type'])) {
+			$filter_member_type = (string)$this->request->get['filter_member_type'];
+		} else {
+			$filter_member_type = '';
+		}
+
+		if (isset($this->request->get['filter_member'])) {
+			$filter_member = (string)$this->request->get['filter_member'];
+		} else {
+			$filter_member = '';
+		}
+
+		if (isset($this->request->get['sort'])) {
+			$sort = (string)$this->request->get['sort'];
+		} else {
+			$sort = 'date_modified';
+		}
+
+		if (isset($this->request->get['page'])) {
+			$page = (int)$this->request->get['page'];
+		} else {
+			$page = 1;
+		}
+
+		$time = time();
+
+		// We create a hash from the data in a similar method to how amazon does things.
+		$string = 'api/marketplace/list' . "\n";
+		$string .= $this->config->get('opencart_username') . "\n";
+		$string .= $this->request->server['HTTP_HOST'] . "\n";
+		$string .= VERSION . "\n";
+		$string .= $time . "\n";
+
+		$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), true));
+
+		$url  = '&username=' . urlencode($this->config->get('opencart_username'));
+		$url .= '&domain=' . $this->request->server['HTTP_HOST'];
+		$url .= '&version=' . VERSION;
+		$url .= '&time=' . $time;
+		$url .= '&signature=' . rawurlencode($signature);
+
+		$allowed = [
+			'filter_search',
+			'filter_category',
+			'filter_license',
+			'filter_rating',
+			'filter_member_type',
+			'filter_member',
+			'sort',
+			'page'
+		];
+
+		$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace' . $url . '&' . http_build_query(array_intersect_key($this->request->get, array_flip($allowed))));
+
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+		curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+		curl_setopt($curl, CURLOPT_POST, true);
+
+		$response = curl_exec($curl);
+
+		$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+		if ($status == 200) {
+			$response_info = json_decode($response, true);
+		} else {
+			$response_info = [];
+		}
+
+		if (isset($response_info['extension_total'])) {
+			$extension_total = (int)$response_info['extension_total'];
+		} else {
+			$extension_total = 0;
+		}
+
+		$url = '&' . http_build_query(array_intersect_key($this->request->get, array_flip($allowed)));
+
+		$data['promotions'] = [];
+
+		if ($page == 1 && isset($response_info['promotions'])) {
+			foreach ($response_info['promotions'] as $result) {
+				$data['promotions'][] = ['href' => $this->url->link('marketplace/marketplace.info', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $result['extension_id'] . $url)] + $result;
+			}
+		}
+
+		$data['extensions'] = [];
+
+		if (isset($response_info['extensions'])) {
+			foreach ($response_info['extensions'] as $result) {
+				$data['extensions'][] = ['href' => $this->url->link('marketplace/marketplace.info', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $result['extension_id'] . $url)] + $result;
+			}
+		}
+
+		// Pagination
+		$allowed = [
+			'filter_search',
+			'filter_category',
+			'filter_license',
+			'filter_rating',
+			'filter_member_type',
+			'filter_member',
+			'sort'
+		];
+
+		$url = '&' . http_build_query(array_intersect_key($this->request->get, array_flip($allowed)));
+
+		$data['total'] = $extension_total;
+		$data['page'] = $page;
+		$data['limit'] = 12;
+		$data['pagination'] = $this->url->link('marketing/marketplace.list', 'user_token=' . $this->session->data['user_token'] . $url . '&page={page}');
+
+		return $this->load->view('marketplace/marketplace_list', $data);
+	}
+
+	/**
+	 * Info
+	 *
+	 * @return \Opencart\System\Engine\Action|null
+	 */
 	public function info() {
 		if (isset($this->request->get['extension_id'])) {
-			$extension_id = $this->request->get['extension_id'];
+			$extension_id = (int)$this->request->get['extension_id'];
 		} else {
 			$extension_id = 0;
 		}
@@ -523,93 +398,81 @@ class ControllerMarketplaceMarketplace extends Controller {
 		$time = time();
 
 		// We create a hash from the data in a similar method to how amazon does things.
-		$string  = 'api/marketplace/info' . "\n";
+		$string = 'api/marketplace/info' . "\n";
 		$string .= $this->config->get('opencart_username') . "\n";
 		$string .= $this->request->server['HTTP_HOST'] . "\n";
 		$string .= VERSION . "\n";
 		$string .= $extension_id . "\n";
 		$string .= $time . "\n";
 
-		$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), 1));
+		$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), true));
 
 		$url  = '&username=' . urlencode($this->config->get('opencart_username'));
 		$url .= '&domain=' . $this->request->server['HTTP_HOST'];
-		$url .= '&version=' . urlencode(VERSION);
+		$url .= '&version=' . VERSION;
 		$url .= '&extension_id=' . $extension_id;
 		$url .= '&time=' . $time;
 		$url .= '&signature=' . rawurlencode($signature);
 
 		$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace/info' . $url);
 
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
-		curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+		curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+		curl_setopt($curl, CURLOPT_POST, true);
 
 		$response = curl_exec($curl);
 
 		$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-		curl_close($curl);
-
-		$response_info = json_decode($response, true);
+		if ($status == 200) {
+			$response_info = json_decode($response, true);
+		} else {
+			$response_info = [];
+		}
 
 		if ($response_info) {
 			$this->load->language('marketplace/marketplace');
 
 			$this->document->setTitle($this->language->get('heading_title'));
 
-			if (isset($response_info['error'])) {
-				$data['error_signature'] = $response_info['error'];
+			$data['signature'] = $this->config->get('opencart_username') && $this->config->get('opencart_secret');
+
+			if (!$this->config->get('opencart_username') || !$this->config->get('opencart_secret')) {
+				$data['error_warning'] = $this->language->get('error_api');
+			} elseif (isset($response_info['error'])) {
+				$data['error_warning'] = $response_info['error'];
 			} else {
-        		$data['error_signature'] = '';
+				$data['error_warning'] = '';
 			}
 
-			$data['user_token'] = $this->session->data['user_token'];
+			$allowed = [
+				'filter_search',
+				'filter_category',
+				'filter_license',
+				'filter_rating',
+				'filter_member_type',
+				'filter_member',
+				'sort',
+				'page'
+			];
 
-			$url = '';
+			$url = '&' . http_build_query(array_intersect_key($this->request->get, array_flip($allowed)));
 
-			if (isset($this->request->get['filter_search'])) {
-				$url .= '&filter_search=' . $this->request->get['filter_search'];
-			}
+			$data['back'] = $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url);
 
-			if (isset($this->request->get['filter_category'])) {
-				$url .= '&filter_category=' . $this->request->get['filter_category'];
-			}
+			$data['breadcrumbs'] = [];
 
-			if (isset($this->request->get['filter_license'])) {
-				$url .= '&filter_license=' . $this->request->get['filter_license'];
-			}
-
-			if (isset($this->request->get['filter_username'])) {
-				$url .= '&filter_username=' . $this->request->get['filter_username'];
-			}
-
-			if (isset($this->request->get['sort'])) {
-				$url .= '&sort=' . $this->request->get['sort'];
-			}
-
-			if (isset($this->request->get['page'])) {
-				$url .= '&page=' . $this->request->get['page'];
-			}
-
-			$data['cancel'] = $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url);
-
-			$data['breadcrumbs'] = array();
-
-			$data['breadcrumbs'][] = array(
+			$data['breadcrumbs'][] = [
 				'text' => $this->language->get('text_home'),
 				'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'])
-			);
+			];
 
-			$data['breadcrumbs'][] = array(
+			$data['breadcrumbs'][] = [
 				'text' => $this->language->get('heading_title'),
 				'href' => $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . $url)
-			);
-
-			$this->load->helper('bbcode');
+			];
 
 			$data['banner'] = $response_info['banner'];
 
@@ -621,10 +484,14 @@ class ControllerMarketplaceMarketplace extends Controller {
 			$data['license'] = $response_info['license'];
 			$data['license_period'] = $response_info['license_period'];
 			$data['purchased'] = $response_info['purchased'];
+			$data['compatibility'] = $response_info['compatibility'];
+
 			$data['rating'] = $response_info['rating'];
 			$data['rating_total'] = $response_info['rating_total'];
+
 			$data['downloaded'] = $response_info['downloaded'];
 			$data['sales'] = $response_info['sales'];
+
 			$data['date_added'] = date($this->language->get('date_format_short'), strtotime($response_info['date_added']));
 			$data['date_modified'] = date($this->language->get('date_format_short'), strtotime($response_info['date_modified']));
 
@@ -633,62 +500,132 @@ class ControllerMarketplaceMarketplace extends Controller {
 			$data['member_date_added'] = $response_info['member_date_added'];
 			$data['filter_member'] = $this->url->link('marketplace/marketplace', 'user_token=' . $this->session->data['user_token'] . '&filter_member=' . $response_info['member_username']);
 
-			$data['comment_total'] = $response_info['comment_total'];
-
-			$data['images'] = array();
-
-			foreach ($response_info['images'] as $result) {
-				$data['images'][] = array(
-					'thumb' => $result['thumb'],
-					'popup' => $result['popup']
-				);
+			if (isset($response_info['comment_total'])) {
+				$data['comment_total'] = $response_info['comment_total'];
+			} else {
+				$data['comment_total'] = 0;
 			}
 
+			$data['images'] = [];
+
+			foreach ($response_info['images'] as $result) {
+				$data['images'][] = [
+					'thumb' => $result['thumb'],
+					'popup' => $result['popup']
+				];
+			}
+
+			// Extension
 			$this->load->model('setting/extension');
 
-			$data['downloads'] = array();
+			$data['downloads'] = [];
 
 			if ($response_info['downloads']) {
-				foreach ($response_info['downloads'] as $result) {
-					$extension_install_info = $this->model_setting_extension->getExtensionInstallByExtensionDownloadId($result['extension_download_id']);
-
-					if ($extension_install_info) {
-						$extension_install_id = $extension_install_info['extension_install_id'];
-					} else {
-						$extension_install_id = 0;
-					}
-
-					$data['downloads'][] = array(
-						'extension_download_id' => $result['extension_download_id'],
-						'extension_install_id'  => $extension_install_id,
-						'name'                  => $result['name'],
-						'filename'              => $result['filename'],
-						'date_added'            => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
-						'status'                => $result['status']
-					);
-				}
+				$this->session->data['extension_download'][$extension_id] = $response_info['downloads'];
+			} else {
+				$this->session->data['extension_download'][$extension_id] = [];
 			}
 
 			$this->document->addStyle('view/javascript/jquery/magnific/magnific-popup.css');
 			$this->document->addScript('view/javascript/jquery/magnific/jquery.magnific-popup.min.js');
+
+			$data['user_token'] = $this->session->data['user_token'];
 
 			$data['header'] = $this->load->controller('common/header');
 			$data['column_left'] = $this->load->controller('common/column_left');
 			$data['footer'] = $this->load->controller('common/footer');
 
 			$this->response->setOutput($this->load->view('marketplace/marketplace_info', $data));
+
+			return null;
 		} else {
-			return new Action('error/not_found');
+			return new \Opencart\System\Engine\Action('error/not_found');
 		}
 	}
 
-	public function purchase() {
+	/**
+	 * Extension
+	 *
+	 * @return void
+	 */
+	public function extension(): void {
 		$this->load->language('marketplace/marketplace');
 
-		$json = array();
+		// Extension
+		if (isset($this->request->get['extension_id'])) {
+			$extension_id = (int)$this->request->get['extension_id'];
+		} else {
+			$extension_id = 0;
+		}
+
+		$this->load->model('setting/extension');
+
+		$data['downloads'] = [];
+
+		if (isset($this->session->data['extension_download'][$extension_id])) {
+			$results = $this->session->data['extension_download'][$extension_id];
+
+			foreach ($results as $result) {
+				if (substr($result['filename'], -10) == '.ocmod.zip') {
+					$code = basename($result['filename'], '.ocmod.zip');
+
+					$install_info = $this->model_setting_extension->getInstallByCode($code);
+
+					// Download
+					if (!$install_info) {
+						$download = $this->url->link('marketplace/marketplace.download', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&extension_download_id=' . $result['extension_download_id']);
+					} else {
+						$download = '';
+					}
+
+					// Install
+					if ($install_info && !$install_info['status']) {
+						$install = $this->url->link('marketplace/installer.install', 'user_token=' . $this->session->data['user_token'] . '&extension_install_id=' . $install_info['extension_install_id']);
+					} else {
+						$install = '';
+					}
+
+					// Uninstall
+					if ($install_info && $install_info['status']) {
+						$uninstall = $this->url->link('marketplace/installer.uninstall', 'user_token=' . $this->session->data['user_token'] . '&extension_install_id=' . $install_info['extension_install_id']);
+					} else {
+						$uninstall = '';
+					}
+
+					// Delete
+					if ($install_info && !$install_info['status']) {
+						$delete = $this->url->link('marketplace/installer.delete', 'user_token=' . $this->session->data['user_token'] . '&extension_install_id=' . $install_info['extension_install_id']);
+					} else {
+						$delete = '';
+					}
+
+					$data['downloads'][] = [
+						'name'       => $result['name'],
+						'date_added' => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
+						'download'   => $download,
+						'install'    => $install,
+						'uninstall'  => $uninstall,
+						'delete'     => $delete
+					];
+				}
+			}
+		}
+
+		$this->response->setOutput($this->load->view('marketplace/marketplace_extension', $data));
+	}
+
+	/**
+	 * Purchase
+	 *
+	 * @return void
+	 */
+	public function purchase(): void {
+		$this->load->language('marketplace/marketplace');
+
+		$json = [];
 
 		if (isset($this->request->get['extension_id'])) {
-			$extension_id = $this->request->get['extension_id'];
+			$extension_id = (int)$this->request->get['extension_id'];
 		} else {
 			$extension_id = 0;
 		}
@@ -698,7 +635,7 @@ class ControllerMarketplaceMarketplace extends Controller {
 		}
 
 		if (!$this->config->get('opencart_username') || !$this->config->get('opencart_secret')) {
-			$json['error'] = $this->language->get('error_opencart');
+			$json['error'] = $this->language->get('error_api');
 		}
 
 		if (!$this->request->post['pin']) {
@@ -708,16 +645,16 @@ class ControllerMarketplaceMarketplace extends Controller {
 		if (!$json) {
 			$time = time();
 
-			// We create a hash from the data in a similarsimilar method to how amazon does things.
-			$string  = 'api/marketplace/purchase' . "\n";
+			// We create a hash from the data in a similar method to how amazon does things.
+			$string = 'api/marketplace/purchase' . "\n";
 			$string .= $this->config->get('opencart_username') . "\n";
 			$string .= $this->request->server['HTTP_HOST'] . "\n";
 			$string .= VERSION . "\n";
 			$string .= $extension_id . "\n";
-		 	$string .= $this->request->post['pin'] . "\n";
+			$string .= $this->request->post['pin'] . "\n";
 			$string .= $time . "\n";
 
-			$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), 1));
+			$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), true));
 
 			$url  = '&username=' . urlencode($this->config->get('opencart_username'));
 			$url .= '&domain=' . $this->request->server['HTTP_HOST'];
@@ -728,19 +665,31 @@ class ControllerMarketplaceMarketplace extends Controller {
 
 			$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace/purchase' . $url);
 
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
-			curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+			curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 
 			$response = curl_exec($curl);
 
-			curl_close($curl);
+			$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-			$response_info = json_decode($response, true);
+			if ($status == 200) {
+				$response_info = json_decode($response, true);
+			} else {
+				$response_info = [];
+			}
 
 			if (isset($response_info['success'])) {
+				// If purchase complete we update the status for all downloads to be available.
+				if (isset($this->session->data['extension_download'][$extension_id])) {
+					$results = $this->session->data['extension_download'][$extension_id];
+
+					foreach (array_keys($results) as $key) {
+						$this->session->data['extension_download'][$extension_id][$key]['status'] = 1;
+					}
+				}
+
 				$json['success'] = $response_info['success'];
 			} elseif (isset($response_info['error'])) {
 				$json['error'] = $response_info['error'];
@@ -753,85 +702,30 @@ class ControllerMarketplaceMarketplace extends Controller {
 		$this->response->setOutput(json_encode($json));
 	}
 
-	public function download() {
+	/**
+	 * Download
+	 *
+	 * @return void
+	 */
+	public function download(): void {
 		$this->load->language('marketplace/marketplace');
 
-		$json = array();
+		$json = [];
 
 		if (isset($this->request->get['extension_id'])) {
-			$extension_id = $this->request->get['extension_id'];
+			$extension_id = (int)$this->request->get['extension_id'];
 		} else {
 			$extension_id = 0;
 		}
 
 		if (isset($this->request->get['extension_download_id'])) {
-			$extension_download_id = $this->request->get['extension_download_id'];
+			$extension_download_id = (int)$this->request->get['extension_download_id'];
 		} else {
 			$extension_download_id = 0;
 		}
 
 		if (!$this->user->hasPermission('modify', 'marketplace/marketplace')) {
 			$json['error'] = $this->language->get('error_permission');
-		}
-
-		// Check if there is a install zip already there
-		$files = glob(DIR_STORAGE . 'marketplace/*.tmp');
-
-		foreach ($files as $file) {
-			if (is_file($file) && (filectime($file) < (time() - 5))) {
-				unlink($file);
-			}
-
-			if (is_file($file)) {
-				$json['error'] = $this->language->get('error_install');
-
-				break;
-			}
-		}
-
-		// Check for any install directories
-		$directories = glob(DIR_STORAGE . 'marketplace/tmp-*');
-
-		foreach ($directories as $directory) {
-			if (is_dir($directory) && (filectime($directory) < (time() - 5))) {
-				// Get a list of files ready to upload
-				$files = array();
-
-				$path = array($directory);
-
-				while (count($path) != 0) {
-					$next = array_shift($path);
-
-					// We have to use scandir function because glob will not pick up dot files.
-					foreach (array_diff(scandir($next), array('.', '..')) as $file) {
-						$file = $next . '/' . $file;
-
-						if (is_dir($file)) {
-							$path[] = $file;
-						}
-
-						$files[] = $file;
-					}
-				}
-
-				rsort($files);
-
-				foreach ($files as $file) {
-					if (is_file($file)) {
-						unlink($file);
-					} elseif (is_dir($file)) {
-						rmdir($file);
-					}
-				}
-
-				rmdir($directory);
-			}
-
-			if (is_dir($directory)) {
-				$json['error'] = $this->language->get('error_install');
-
-				break;
-			}
 		}
 
 		if (!$json) {
@@ -846,7 +740,7 @@ class ControllerMarketplaceMarketplace extends Controller {
 			$string .= $extension_download_id . "\n";
 			$string .= $time . "\n";
 
-			$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), 1));
+			$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), true));
 
 			$url  = '&username=' . urlencode($this->config->get('opencart_username'));
 			$url .= '&domain=' . $this->request->server['HTTP_HOST'];
@@ -858,37 +752,48 @@ class ControllerMarketplaceMarketplace extends Controller {
 
 			$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace/download&extension_download_id=' . $extension_download_id . $url);
 
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
-			curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+			curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 
 			$response = curl_exec($curl);
 
-			$response_info = json_decode($response, true);
+			$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-			curl_close($curl);
+			if ($status == 200) {
+				$response_info = json_decode($response, true);
+			} else {
+				$response_info = [];
+			}
 
 			if (isset($response_info['download'])) {
 				if (substr($response_info['filename'], -10) == '.ocmod.zip') {
-					$this->session->data['install'] = token(10);
+					$handle = fopen(DIR_STORAGE . 'marketplace/' . $response_info['filename'], 'w');
 
 					$download = file_get_contents($response_info['download']);
-
-					$handle = fopen(DIR_STORAGE . 'marketplace/' . $this->session->data['install'] . '.tmp', 'w');
 
 					fwrite($handle, $download);
 
 					fclose($handle);
 
+					// Extension
+					$extension_data = [
+						'extension_id'          => $extension_id,
+						'extension_download_id' => $extension_download_id,
+						'name'                  => $response_info['name'],
+						'description'           => $response_info['description'] ?? '',
+						'code'                  => basename($response_info['filename'], '.ocmod.zip'),
+						'author'                => $response_info['author'],
+						'version'               => $response_info['version'],
+						'link'                  => OPENCART_SERVER . 'index.php?route=marketplace/extension.info&extension_id=' . $extension_id
+					];
+
 					$this->load->model('setting/extension');
 
-					$json['extension_install_id'] = $this->model_setting_extension->addExtensionInstall($response_info['extension'], $extension_id, $extension_download_id);
+					$json['extension_install_id'] = $this->model_setting_extension->addInstall($extension_data);
 
-					$json['text'] = $this->language->get('text_install');
-
-					$json['next'] = str_replace('&amp;', '&', $this->url->link('marketplace/install/install', 'user_token=' . $this->session->data['user_token'] . '&extension_install_id=' . $json['extension_install_id']));
+					$json['success'] = $this->language->get('text_success');
 				} else {
 					$json['redirect'] = $response_info['download'];
 				}
@@ -903,19 +808,24 @@ class ControllerMarketplaceMarketplace extends Controller {
 		$this->response->setOutput(json_encode($json));
 	}
 
-	public function addComment() {
+	/**
+	 * Add Comment
+	 *
+	 * @return void
+	 */
+	public function addComment(): void {
 		$this->load->language('marketplace/marketplace');
 
-		$json = array();
+		$json = [];
 
 		if (isset($this->request->get['extension_id'])) {
-			$extension_id = $this->request->get['extension_id'];
+			$extension_id = (int)$this->request->get['extension_id'];
 		} else {
 			$extension_id = 0;
 		}
 
 		if (isset($this->request->get['parent_id'])) {
-			$parent_id = $this->request->get['parent_id'];
+			$parent_id = (int)$this->request->get['parent_id'];
 		} else {
 			$parent_id = 0;
 		}
@@ -927,12 +837,12 @@ class ControllerMarketplaceMarketplace extends Controller {
 		if (!$this->config->get('opencart_username') || !$this->config->get('opencart_secret')) {
 			$json['error'] = $this->language->get('error_opencart');
 		}
-					
-		if (!$json) {	
+
+		if (!$json) {
 			$time = time();
 
 			// We create a hash from the data in a similar method to how amazon does things.
-			$string  = 'api/marketplace/addcomment' . "\n";
+			$string = 'api/marketplace/addcomment' . "\n";
 			$string .= urlencode($this->config->get('opencart_username')) . "\n";
 			$string .= $this->request->server['HTTP_HOST'] . "\n";
 			$string .= urlencode(VERSION) . "\n";
@@ -941,7 +851,7 @@ class ControllerMarketplaceMarketplace extends Controller {
 			$string .= urlencode(base64_encode($this->request->post['comment'])) . "\n";
 			$string .= $time . "\n";
 
-			$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), 1));
+			$signature = base64_encode(hash_hmac('sha1', $string, $this->config->get('opencart_secret'), true));
 
 			$url  = '&username=' . $this->config->get('opencart_username');
 			$url .= '&domain=' . $this->request->server['HTTP_HOST'];
@@ -953,19 +863,22 @@ class ControllerMarketplaceMarketplace extends Controller {
 
 			$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace/addcomment&extension_id=' . $extension_id . $url);
 
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
-			curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-			curl_setopt($curl, CURLOPT_POST, 1);
-			curl_setopt($curl, CURLOPT_POSTFIELDS, array('comment' => $this->request->post['comment']));
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+			curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+			curl_setopt($curl, CURLOPT_POST, true);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, ['comment' => $this->request->post['comment']]);
 
 			$response = curl_exec($curl);
 
-			curl_close($curl);
+			$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-			$response_info = json_decode($response, true);
+			if ($status == 200) {
+				$response_info = json_decode($response, true);
+			} else {
+				$response_info = [];
+			}
 
 			if (isset($response_info['success'])) {
 				$json['success'] = $response_info['success'];
@@ -980,7 +893,12 @@ class ControllerMarketplaceMarketplace extends Controller {
 		$this->response->setOutput(json_encode($json));
 	}
 
-	public function comment() {
+	/**
+	 * Comment
+	 *
+	 * @return void
+	 */
+	public function comment(): void {
 		$this->load->language('marketplace/marketplace');
 
 		if (isset($this->request->get['extension_id'])) {
@@ -990,7 +908,7 @@ class ControllerMarketplaceMarketplace extends Controller {
 		}
 
 		if (isset($this->request->get['page'])) {
-			$page = $this->request->get['page'];
+			$page = (int)$this->request->get['page'];
 		} else {
 			$page = 1;
 		}
@@ -1000,113 +918,128 @@ class ControllerMarketplaceMarketplace extends Controller {
 
 		$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace/comment&extension_id=' . $extension_id . '&page=' . $page);
 
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
-		curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+		curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 
 		$response = curl_exec($curl);
 
-		curl_close($curl);
+		$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-		$json = json_decode($response, true);
+		if ($status == 200) {
+			$json = json_decode($response, true);
+		} else {
+			$json = [];
+		}
 
-		$data['comments'] = array();
-
-		$comment_total = $json['comment_total'];
+		$data['comments'] = [];
 
 		if ($json['comments']) {
 			$results = $json['comments'];
 
 			foreach ($results as $result) {
 				if ($result['reply_total'] > 5) {
-					$next = $this->url->link('marketplace/marketplace/reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $result['extension_comment_id'] . '&page=2');
+					$next = $this->url->link('marketplace/marketplace.reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $result['extension_comment_id'] . '&page=2');
 				} else {
 					$next = '';
 				}
 
-				$data['comments'][] = array(
+				$data['comments'][] = [
 					'extension_comment_id' => $result['extension_comment_id'],
 					'member'               => $result['member'],
 					'image'                => $result['image'],
 					'comment'              => $result['comment'],
 					'date_added'           => $result['date_added'],
 					'reply'                => $result['reply'],
-					'add'                  => $this->url->link('marketplace/marketplace/addcomment', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $result['extension_comment_id']),
-					'refresh'              => $this->url->link('marketplace/marketplace/reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $result['extension_comment_id'] . '&page=1'),
+					'add'                  => $this->url->link('marketplace/marketplace.addcomment', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $result['extension_comment_id']),
+					'refresh'              => $this->url->link('marketplace/marketplace.reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $result['extension_comment_id'] . '&page=1'),
 					'next'                 => $next
-				);
+				];
 			}
 		}
 
-		$data['pagination'] = $this->load->controller('common/pagination', array(
-			'total' => $comment_total,
-			'page'  => $page,
-			'limit' => 20,
-			'url'   => $this->url->link('marketplace/marketplace/comment', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&page={page}')
-		));
+		$comment_total = $json['comment_total'];
 
-		$data['refresh'] = $this->url->link('marketplace/marketplace/comment', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&page=' . $page);
+		$data['total'] = $comment_total;
+		$data['page'] = $page;
+		$data['limit'] = 20;
+		$data['pagination'] = $this->url->link('marketing/marketplace.comment', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&page={page}');
+
+		$data['refresh'] = $this->url->link('marketplace/marketplace.comment', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&page=' . $page);
 
 		$this->response->setOutput($this->load->view('marketplace/marketplace_comment', $data));
 	}
 
-	public function reply() {
+	/**
+	 * Reply
+	 *
+	 * @return void
+	 */
+	public function reply(): void {
 		$this->load->language('marketplace/marketplace');
 
 		if (isset($this->request->get['extension_id'])) {
-			$extension_id = $this->request->get['extension_id'];
+			$extension_id = (int)$this->request->get['extension_id'];
 		} else {
 			$extension_id = 0;
 		}
 
 		if (isset($this->request->get['parent_id'])) {
-			$parent_id = $this->request->get['parent_id'];
+			$parent_id = (int)$this->request->get['parent_id'];
 		} else {
 			$parent_id = 0;
 		}
 
 		if (isset($this->request->get['page'])) {
-			$page = $this->request->get['page'];
+			$page = (int)$this->request->get['page'];
 		} else {
 			$page = 1;
 		}
 
 		$curl = curl_init(OPENCART_SERVER . 'index.php?route=api/marketplace/comment&extension_id=' . $extension_id . '&parent_id=' . $parent_id . '&page=' . $page);
 
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
-		curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+		curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 
 		$response = curl_exec($curl);
 
-		$json = json_decode($response, true);
+		$status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-		$data['replies'] = array();
+		if ($status == 200) {
+			$json = json_decode($response, true);
+		} else {
+			$json = [];
+		}
 
-		$reply_total = $json['reply_total'];
+		$data['replies'] = [];
 
-		if ($json['replies']) {
+		if (isset($json['reply_total'])) {
+			$reply_total = $json['reply_total'];
+		} else {
+			$reply_total = 0;
+		}
+
+		if (isset($json['replies'])) {
 			$results = $json['replies'];
 
 			foreach ($results as $result) {
-				$data['replies'][] = array(
+				$data['replies'][] = [
 					'extension_comment_id' => $result['extension_comment_id'],
 					'member'               => $result['member'],
 					'image'                => $result['image'],
 					'comment'              => $result['comment'],
 					'date_added'           => $result['date_added']
-				);
+				];
 			}
 		}
 
-		$data['refresh'] = $this->url->link('marketplace/marketplace/reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $parent_id . '&page=' . $page);
+		$data['refresh'] = $this->url->link('marketplace/marketplace.reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $parent_id . '&page=' . $page);
 
 		if (($page * 5) < $reply_total) {
-			$data['next'] = $this->url->link('marketplace/marketplace/reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $parent_id . '&page=' . ($page + 1));
+			$data['next'] = $this->url->link('marketplace/marketplace.reply', 'user_token=' . $this->session->data['user_token'] . '&extension_id=' . $extension_id . '&parent_id=' . $parent_id . '&page=' . ($page + 1));
 		} else {
 			$data['next'] = '';
 		}
